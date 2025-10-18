@@ -4693,19 +4693,19 @@ Priority means one sprite will appear to move "in front of" or "behind" another 
 
 You can create multicolored sprites although using multicolor mode requires that you use PAIRS of pixels instead of individual pixels in your sprite picture (in other words each colored "dot" or "block" in the sprite will consist of two pixels side by side). You have 4 colors to choose from: Sprite Color (chart above), Multicolor 1, Multicolor 2 and "Background Color" (background is achieved by using zero settings which let the background color "show through"). Consider one horizontal 8-pixel block in a sprite picture. The color of each PAIR of pixels is determined according to whether the left, right, or both pixels are solid, like this:
 
-BACKGROUND
+- [ ] BACKGROUND
 
 (Making BOTH PIXELS BLANK (zero) lets the INNER SCREEN COLOR (background) show through.)
 
-MULTICOLOR 1
+- [ ] MULTICOLOR 1
 
 (Making the RIGHT PIXEL SOLID in a pair of pixels sets BOTH PIXELS to Multicolor 1.)
 
-SPRITE COLOR
+- [ ] SPRITE COLOR
 
 (Making the LEFT PIXEL SOLID in a pair of pixels sets BOTH PIXELS to Sprite Color.)
 
-MULTICOLOR 2
+- [ ] MULTICOLOR 2
 
 (Making BOTH PIXELS SOLID in a pair of pixels sets BOTH PIXELS to Multicolor 2.)
 

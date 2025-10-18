@@ -23,7 +23,7 @@ function M.setup()
     vim.diagnostic.config({ virtual_lines = false }, vim.api.nvim_create_namespace("lsp_lines"))
   end
 
-  -- Configure diagnostics with granular control
+  -- Configure diagnostics as specified in CLAUDE.md
   vim.diagnostic.config({
     virtual_lines = false, -- Disable virtual lines to reduce clutter
     signs = {
@@ -35,33 +35,16 @@ function M.setup()
       }
     },
     virtual_text = {
+      prefix = "●", -- Could be '●', '▎', 'x', '■', etc.
       spacing = 2,
-      source = "if_many", -- Show source only if multiple sources
-      prefix = "●",
-      -- Only show inline virtual text for errors and warnings to reduce clutter
-      severity = { min = vim.diagnostic.severity.WARN },
-      format = function(diagnostic)
-        -- Truncate long messages to keep the editor readable
-        local max_width = 80
-        if #diagnostic.message > max_width then
-          return diagnostic.message:sub(1, max_width - 3) .. "..."
-        end
-        return diagnostic.message
-      end,
     },
     float = {
       focusable = false,
       style = "minimal",
       border = "rounded",
-      source = "if_many", -- Show source only if multiple sources
+      source = true,
       header = "",
       prefix = "",
-      -- Show all severities in float window
-      severity_sort = true,
-    },
-    underline = {
-      -- Only underline errors to keep it clean
-      severity = { min = vim.diagnostic.severity.ERROR },
     },
     update_in_insert = false, -- Don't update diagnostics in insert mode
     severity_sort = true,     -- Sort by severity (errors first)

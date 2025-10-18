@@ -18,6 +18,23 @@ function M.setup(config)
     vim.diagnostic.open_float()
   end, { desc = "Show line diagnostics", silent = true })
 
+  -- Diagnostic display mode toggles
+  vim.keymap.set("n", "<leader>dv", function()
+    require("c64.diagnostic_toggle").enable_virtual_text()
+  end, { desc = "Diagnostics: Enable virtual text", silent = true })
+
+  vim.keymap.set("n", "<leader>dl", function()
+    require("c64.diagnostic_toggle").enable_virtual_lines()
+  end, { desc = "Diagnostics: Enable virtual lines", silent = true })
+
+  vim.keymap.set("n", "<leader>ds", function()
+    require("c64.diagnostic_toggle").enable_signs_only()
+  end, { desc = "Diagnostics: Signs only", silent = true })
+
+  vim.keymap.set("n", "<leader>dt", function()
+    require("c64.diagnostic_toggle").cycle_modes()
+  end, { desc = "Diagnostics: Toggle display mode", silent = true })
+
   -- Telescope integration for diagnostics (if available)
   local telescope_ok, _ = pcall(require, "telescope")
   if telescope_ok then
@@ -28,6 +45,19 @@ function M.setup(config)
     vim.keymap.set("n", "<leader>ts", function()
       require("telescope.builtin").lsp_document_symbols()
     end, { desc = "Telescope: Show document symbols", silent = true })
+
+    -- C64 Reference Manual search
+    vim.keymap.set("n", "<leader>cr", function()
+      require("telescope").extensions.c64.reference()
+    end, { desc = "C64: Search reference manual", silent = true })
+
+    vim.keymap.set("n", "<leader>cm", function()
+      require("telescope").extensions.c64.memory_map()
+    end, { desc = "C64: Memory map", silent = true })
+
+    vim.keymap.set("n", "<leader>cR", function()
+      require("telescope").extensions.c64.registers()
+    end, { desc = "C64: Registers", silent = true })
   end
 end
 

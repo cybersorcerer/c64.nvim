@@ -21,8 +21,16 @@ A comprehensive Neovim plugin for C64 Assembler development using Kick Assembler
   - Automatic PRG file detection
 
 - **Telescope Integration**: Quick access to C64-specific references
+  - **C64 Reference Manual Search** - Search and browse the complete C64 Programmer's Reference Guide directly in Neovim
   - Memory map browser
   - Register and constant lookup
+  - Telescope quickfix integration for assembly errors
+
+- **Diagnostic Display Modes**: Flexible diagnostic visualization
+  - Virtual text mode (inline diagnostics)
+  - Virtual lines mode (separate lines for diagnostics)
+  - Signs only mode (minimal clutter)
+  - Easy toggle between modes
 
 - **Customizable**: Extensive configuration options for LSP, highlighting, and keybindings
 
@@ -73,27 +81,27 @@ return {
 
 ### Using Neovim's built-in package manager
 
-1. Create the plugin directory (if it doesn't exist):
+Create the plugin directory (if it doesn't exist):
 
 ```bash
 mkdir -p ~/.local/share/nvim/site/pack/c64/start
 ```
 
-2. Clone the repository:
+Clone the repository:
 
 ```bash
 git clone https://github.com/yourusername/c64.nvim.git \
   ~/.local/share/nvim/site/pack/c64/start/c64.nvim
 ```
 
-3. Install nvim-lspconfig as well:
+Install nvim-lspconfig as well:
 
 ```bash
 git clone https://github.com/neovim/nvim-lspconfig.git \
   ~/.local/share/nvim/site/pack/c64/start/nvim-lspconfig
 ```
 
-4. Add to your `init.lua`:
+Add to your `init.lua`:
 
 ```lua
 require("c64").setup({
@@ -101,7 +109,7 @@ require("c64").setup({
 })
 ```
 
-5. Restart Neovim
+Restart Neovim.
 
 ## Configuration
 
@@ -219,11 +227,30 @@ This design ensures c64.nvim works harmoniously with your existing Neovim config
 
 ### Default Keymaps
 
+#### Build & Run
+
 | Key | Action | Description |
 |-----|--------|-------------|
 | `<leader>ka` | Assemble | Compile current file with Kick Assembler |
 | `<leader>kr` | Run | Launch current program in VICE emulator |
-| `<leader>d` | Diagnostics | Show line diagnostics in floating window |
+
+#### Diagnostics
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>d` | Show Diagnostics | Show line diagnostics in floating window |
+| `<leader>dv` | Virtual Text Mode | Enable inline diagnostic text |
+| `<leader>dl` | Virtual Lines Mode | Enable diagnostic lines (requires lsp_lines.nvim) |
+| `<leader>ds` | Signs Only Mode | Show only diagnostic icons in sign column |
+| `<leader>dt` | Toggle Mode | Cycle through diagnostic display modes |
+
+#### C64 Reference & Tools
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>cr` | C64 Reference | Search C64 Programmer's Reference Manual |
+| `<leader>cm` | Memory Map | Browse C64 memory map |
+| `<leader>cR` | Registers | Browse C64 registers and constants |
 | `<leader>td` | Telescope Diagnostics | Show all diagnostics (requires Telescope) |
 | `<leader>ts` | Telescope Symbols | Show document symbols (requires Telescope) |
 
@@ -256,22 +283,38 @@ The plugin provides the following user commands:
 
 ## Telescope Extension
 
-If you have Telescope installed, c64.nvim provides additional pickers:
+c64.nvim provides powerful Telescope integrations for enhanced development workflow:
 
-```lua
--- Show C64 memory map
-:Telescope c64 memory_map
+### C64 Reference Manual Search
 
--- Show C64 registers and constants
-:Telescope c64 registers
+Press `<leader>cr` to search the complete C64 Programmer's Reference Guide:
+
+- **Fuzzy search** through all sections (searches both titles and content)
+- **Live preview** of sections as you navigate
+- **Vertical split** display - see reference alongside your code
+- **Markdown rendering** with syntax highlighting
+- No need to leave Neovim or open PDFs!
+
+**Usage:**
+
+```vim
+:Telescope c64 reference
+# or use the keymap:
+<leader>cr
 ```
 
-You can also bind these to keys:
+Type to search (e.g., "sprite", "vic", "sid"), navigate with `j/k`, press `Enter` to open in a split.
 
-```lua
-vim.keymap.set("n", "<leader>cm", "<cmd>Telescope c64 memory_map<cr>")
-vim.keymap.set("n", "<leader>cr", "<cmd>Telescope c64 registers<cr>")
+### Memory Map & Registers
+
+Browse C64 memory locations and hardware registers:
+
+```vim
+:Telescope c64 memory_map    # or <leader>cm
+:Telescope c64 registers     # or <leader>cR
 ```
+
+Select an entry to insert it at your cursor position.
 
 ## File Type Detection
 
@@ -281,15 +324,18 @@ The plugin uses intelligent multi-level detection to identify Kick Assembler fil
 
 Files with extensions `*.asm`, `*.s`, or `*.inc` are automatically analyzed using this strategy:
 
-**Level 1: Kick Assembler Directives** (Most Reliable)
+#### Level 1: Kick Assembler Directives (Most Reliable)
+
 - Detects Kick Assembler-specific syntax like `.import`, `.macro`, `.namespace`, `.var`, etc.
 - If found, filetype is set to `kickass`
 
-**Level 2: Project Marker File**
+#### Level 2: Project Marker File
+
 - Searches for `.kickass`, `kickass.cfg`, or `.kickassembler` file in the project directory tree
 - If found, all `.asm` files in that project are treated as Kick Assembler files
 
-**Level 3: C64-Specific Patterns** (Hints)
+#### Level 3: C64-Specific Patterns (Hints)
+
 - Detects C64-specific memory addresses and Kernal routines (e.g., `$D000`, `CHROUT`)
 - Requires at least 2 C64-specific references to trigger
 
@@ -321,30 +367,64 @@ touch .kickass
 
 Or create a `kickass.cfg` with your Kick Assembler configuration.
 
-## Diagnostics
+## Diagnostic Display Modes
 
-The plugin configures custom diagnostic signs with Nerd Font icons:
+c64.nvim offers flexible diagnostic visualization with three display modes:
 
-- Error: �Z
-- Warning: �*
-- Hint: �6
-- Info: ��
+### Virtual Text Mode (Default)
 
-Diagnostics are displayed with:
+Diagnostics appear inline next to your code:
 
-- Inline virtual text
-- Sign column indicators
-- Floating windows (on demand)
-- Quickfix list integration
+```asm
+10: lda #$00    ● Error: Invalid syntax
+```
+
+### Virtual Lines Mode
+
+Diagnostics appear in separate lines below the code (requires [lsp_lines.nvim](https://git.sr.ht/~whynothugo/lsp_lines.nvim)):
+
+```asm
+10: lda #$00
+    ┗━ Error: Invalid syntax
+```
+
+### Signs Only Mode
+
+Only icons appear in the sign column, minimal distraction:
+
+```asm
+󰅚 10: lda #$00
+```
+
+Use `<leader>d` to see full diagnostics in a floating window.
+
+### Diagnostic Icons
+
+- Error: 󰅚 (red alert circle)
+- Warning: 󰀪 (yellow alert)
+- Hint: 󰌶 (blue lightbulb)
+- Info: 󰋽 (cyan information)
 
 ## Workflow Example
 
-1. Open a Kick Assembler file: `nvim myprogram.asm`
-2. Write your code with LSP assistance (completions, diagnostics, etc.)
-3. Press `<leader>ka` to assemble
-4. If errors occur, they appear in the quickfix list
-5. Fix errors and reassemble
-6. Press `<leader>kr` to launch VICE and test your program
+### Basic Development Cycle
+
+1. **Open** a Kick Assembler file: `nvim myprogram.asm`
+2. **Write** your code with LSP assistance (completions, diagnostics, etc.)
+3. **Need help?** Press `<leader>cr` to search the C64 Reference Manual
+4. **Assemble**: Press `<leader>ka` to compile
+5. **Errors?** Telescope opens with clickable error list
+6. **Fix** errors and reassemble
+7. **Test**: Press `<leader>kr` to launch VICE and test your program
+
+### Using the C64 Reference
+
+1. Press `<leader>cr` to open the reference search
+2. Type to search (e.g., "sprite" or "vic")
+3. See live preview in Telescope
+4. Press `Enter` to open in vertical split
+5. Reference stays open while you code
+6. Press `q` to close the reference
 
 ## Troubleshooting
 

@@ -10,8 +10,42 @@ local finders = require("telescope.finders")
 local conf = require("telescope.config").values
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
+local previewers = require("telescope.previewers")
 
 local M = {}
+
+-- Path to c64ref.md (relative to plugin root)
+local function get_ref_path()
+  -- Try multiple strategies to find the plugin root
+  local strategies = {
+    -- Strategy 1: Use runtimepath to find c64.nvim
+    function()
+      for _, path in ipairs(vim.api.nvim_list_runtime_paths()) do
+        if path:match("c64%.nvim") then
+          return path .. "/c64ref/c64ref.md"
+        end
+      end
+      return nil
+    end,
+    -- Strategy 2: Relative to this file
+    function()
+      local this_file = debug.getinfo(1).source:sub(2)
+      local plugin_dir = vim.fn.fnamemodify(this_file, ":h:h:h:h")
+      return plugin_dir .. "/c64ref/c64ref.md"
+    end,
+  }
+
+  for _, strategy in ipairs(strategies) do
+    local ref_path = strategy()
+    if ref_path and vim.fn.filereadable(ref_path) == 1 then
+      return ref_path
+    end
+  end
+
+  -- Fallback error
+  vim.notify("C64 reference manual not found. Check c64ref/c64ref.md exists in plugin directory.", vim.log.levels.ERROR)
+  return nil
+end
 
 -- Show C64 memory map reference
 local function c64_memory_map(opts)
@@ -104,10 +138,78 @@ local function c64_registers(opts)
     :find()
 end
 
+-- Search C64 Reference Manual
+local function c64_reference(opts)
+  opts = opts or {}
+
+  local c64ref = require("c64.c64ref")
+  local ref_path = get_ref_path()
+
+  -- Parse the reference manual
+  local sections, err = c64ref.parse_sections(ref_path)
+
+  if err then
+    vim.notify("Error loading C64 reference: " .. err, vim.log.levels.ERROR)
+    return
+  end
+
+  if not sections or #sections == 0 then
+    vim.notify("No sections found in C64 reference manual", vim.log.levels.WARN)
+    return
+  end
+
+  pickers
+    .new(opts, {
+      prompt_title = "C64 Reference Manual",
+      finder = finders.new_table({
+        results = sections,
+        entry_maker = function(entry)
+          -- Clean title for display
+          local display_title = entry.title:gsub("^#+%s*", "")
+          local indent = string.rep("  ", entry.level - 1)
+
+          return {
+            value = entry,
+            display = indent .. display_title,
+            ordinal = display_title .. " " .. entry.content,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter(opts),
+      previewer = previewers.new_buffer_previewer({
+        title = "Preview",
+        define_preview = function(self, entry)
+          local lines = {}
+          table.insert(lines, entry.value.title)
+          table.insert(lines, string.rep("=", 80))
+          table.insert(lines, "")
+
+          for line in entry.value.content:gmatch("[^\r\n]+") do
+            table.insert(lines, line)
+          end
+
+          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+          vim.bo[self.state.bufnr].filetype = "markdown"
+        end,
+      }),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          -- Show in floating window
+          c64ref.show_section(selection.value)
+        end)
+        return true
+      end,
+    })
+    :find()
+end
+
 -- Export extension
 return telescope.register_extension({
   exports = {
     memory_map = c64_memory_map,
     registers = c64_registers,
+    reference = c64_reference,
   },
 })

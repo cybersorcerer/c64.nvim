@@ -56,6 +56,9 @@ local function parse_kickass_output(output)
   return qf_list
 end
 
+-- Export parser for testing (can be removed later)
+M._parse_output = parse_kickass_output
+
 -- Assemble the current file
 function M.assemble(config)
   local current_file = vim.fn.expand("%:p")
@@ -89,25 +92,58 @@ function M.assemble(config)
 
   -- Execute command
   local output = vim.fn.system(cmd)
-  local exit_code = vim.v.shell_error
+  -- Note: Kickass Assembler may return exit code 0 even with errors
+  -- so we check the output content instead
 
-  if exit_code == 0 then
-    vim.notify("Assembly successful!", vim.log.levels.INFO)
-    vim.fn.setqflist({}, "r") -- Clear quickfix list
-  else
+  -- Check for errors in output, regardless of exit code
+  -- Kickass may return exit code 0 even with errors
+  local has_errors = output:match("Got %d+ errors") or output:match("Error:")
+  local error_count = output:match("Got (%d+) errors")
+
+  if has_errors then
+    -- Parse errors from output
     local qf_list = parse_kickass_output(output)
 
     if #qf_list > 0 then
       vim.fn.setqflist(qf_list, "r")
-      vim.cmd("copen")
-      vim.notify(
-        string.format("Assembly failed with %d error(s). Check quickfix list.", #qf_list),
-        vim.log.levels.ERROR
-      )
+      local count = error_count or #qf_list
+
+      -- Try to open with Telescope, fallback to quickfix
+      local telescope_ok = pcall(require, "telescope.builtin")
+      if telescope_ok then
+        vim.notify(
+          string.format("Assembly failed with %s error(s). Opening Telescope...", count),
+          vim.log.levels.ERROR
+        )
+        -- Defer to let the notification show first
+        vim.defer_fn(function()
+          require("telescope.builtin").quickfix()
+        end, 100)
+      else
+        -- Fallback to standard quickfix if Telescope not available
+        vim.cmd("copen")
+        vim.notify(
+          string.format("Assembly failed with %s error(s). Check quickfix list.", count),
+          vim.log.levels.ERROR
+        )
+      end
     else
-      -- No structured errors found, show raw output
-      vim.notify("Assembly failed:\n" .. output, vim.log.levels.ERROR)
+      -- Found error indicator but couldn't parse - show raw output
+      vim.notify("Assembly failed (could not parse errors):\n" .. output, vim.log.levels.ERROR)
     end
+  elseif output:match("Compiled to") then
+    -- Success - found "Compiled to" message
+    local prg_file = output:match("Compiled to (.+%.prg)")
+    if prg_file then
+      vim.notify("Assembly successful! → " .. vim.fn.fnamemodify(prg_file, ":t"), vim.log.levels.INFO)
+    else
+      vim.notify("Assembly successful!", vim.log.levels.INFO)
+    end
+    vim.fn.setqflist({}, "r") -- Clear quickfix list
+  else
+    -- Unclear status - show warning
+    vim.notify("Assembly completed (status unclear, check output)", vim.log.levels.WARN)
+    print(output) -- Print full output to command line
   end
 end
 
