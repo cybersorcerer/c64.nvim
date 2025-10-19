@@ -77,14 +77,17 @@ function M.assemble(config)
     vim.cmd("write")
   end
 
-  -- Get output directory (same as source file)
+  -- Get output directory and filename (same as source file)
   local output_dir = vim.fn.expand("%:p:h")
+  local output_basename = vim.fn.expand("%:t:r") -- filename without extension
+  local output_file = output_dir .. "/" .. output_basename .. ".prg"
 
   -- Build command
+  -- Kick Assembler syntax: java -jar kickass.jar -o outputfile.prg sourcefile.asm
   local cmd = string.format(
     "java -jar %s -o %s %s",
     vim.fn.shellescape(config.kickass_jar_path),
-    vim.fn.shellescape(output_dir),
+    vim.fn.shellescape(output_file),
     vim.fn.shellescape(current_file)
   )
 
@@ -131,9 +134,9 @@ function M.assemble(config)
       -- Found error indicator but couldn't parse - show raw output
       vim.notify("Assembly failed (could not parse errors):\n" .. output, vim.log.levels.ERROR)
     end
-  elseif output:match("Compiled to") then
-    -- Success - found "Compiled to" message
-    local prg_file = output:match("Compiled to (.+%.prg)")
+  elseif output:match("Writing prg file:") then
+    -- Success - found "Writing prg file:" message from Kick Assembler
+    local prg_file = output:match("Writing prg file: (.+%.prg)")
     if prg_file then
       vim.notify("Assembly successful! → " .. vim.fn.fnamemodify(prg_file, ":t"), vim.log.levels.INFO)
     else

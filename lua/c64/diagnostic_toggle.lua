@@ -5,7 +5,15 @@ local M = {}
 -- Current diagnostic mode
 local current_mode = "virtual_text" -- default mode
 
--- Mode configurations
+-- Custom diagnostic signs with Nerd Font icons (shared with diagnostics.lua)
+local signs = {
+  Error = "󰅚", -- nf-mdi-alert-circle
+  Warn = "󰀪",  -- nf-mdi-alert
+  Hint = "󰌶",  -- nf-mdi-lightbulb
+  Info = "󰋽"   -- nf-mdi-information
+}
+
+-- Mode configurations (preserving signs configuration)
 local modes = {
   virtual_text = {
     virtual_text = {
@@ -13,14 +21,38 @@ local modes = {
       spacing = 2,
     },
     virtual_lines = false,
+    signs = {
+      text = {
+        [vim.diagnostic.severity.ERROR] = signs.Error,
+        [vim.diagnostic.severity.WARN] = signs.Warn,
+        [vim.diagnostic.severity.HINT] = signs.Hint,
+        [vim.diagnostic.severity.INFO] = signs.Info,
+      }
+    },
   },
   virtual_lines = {
     virtual_text = false,
     virtual_lines = true,
+    signs = {
+      text = {
+        [vim.diagnostic.severity.ERROR] = signs.Error,
+        [vim.diagnostic.severity.WARN] = signs.Warn,
+        [vim.diagnostic.severity.HINT] = signs.Hint,
+        [vim.diagnostic.severity.INFO] = signs.Info,
+      }
+    },
   },
   signs_only = {
     virtual_text = false,
     virtual_lines = false,
+    signs = {
+      text = {
+        [vim.diagnostic.severity.ERROR] = signs.Error,
+        [vim.diagnostic.severity.WARN] = signs.Warn,
+        [vim.diagnostic.severity.HINT] = signs.Hint,
+        [vim.diagnostic.severity.INFO] = signs.Info,
+      }
+    },
   },
 }
 
@@ -30,6 +62,7 @@ function M.enable_virtual_text()
   vim.diagnostic.config({
     virtual_text = modes.virtual_text.virtual_text,
     virtual_lines = modes.virtual_text.virtual_lines,
+    signs = modes.virtual_text.signs,
   })
   vim.notify("Diagnostics: Virtual text enabled", vim.log.levels.INFO)
 end
@@ -51,6 +84,7 @@ function M.enable_virtual_lines()
   vim.diagnostic.config({
     virtual_text = modes.virtual_lines.virtual_text,
     virtual_lines = modes.virtual_lines.virtual_lines,
+    signs = modes.virtual_lines.signs,
   })
   vim.notify("Diagnostics: Virtual lines enabled", vim.log.levels.INFO)
 end
@@ -61,6 +95,7 @@ function M.enable_signs_only()
   vim.diagnostic.config({
     virtual_text = modes.signs_only.virtual_text,
     virtual_lines = modes.signs_only.virtual_lines,
+    signs = modes.signs_only.signs,
   })
   vim.notify("Diagnostics: Signs only (use <leader>d for details)", vim.log.levels.INFO)
 end

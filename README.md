@@ -19,6 +19,8 @@ A comprehensive Neovim plugin for C64 Assembler development using Kick Assembler
 - **VICE Emulator Integration**: Launch and test your programs instantly
   - One-keypress execution
   - Automatic PRG file detection
+  - Debug mode with VICE monitor and symbol file support
+  - Remote monitor integration for advanced debugging
 
 - **Telescope Integration**: Quick access to C64-specific references
   - **C64 Reference Manual Search** - Search and browse the complete C64 Programmer's Reference Guide directly in Neovim
@@ -190,6 +192,7 @@ require("c64").setup({
   keymaps = {
     assemble = "<leader>ka",
     run_vice = "<leader>kr",
+    debug_vice = "<leader>kd",
     show_diagnostics = "<leader>d",
   },
 })
@@ -233,6 +236,7 @@ This design ensures c64.nvim works harmoniously with your existing Neovim config
 |-----|--------|-------------|
 | `<leader>ka` | Assemble | Compile current file with Kick Assembler |
 | `<leader>kr` | Run | Launch current program in VICE emulator |
+| `<leader>kd` | Debug | Launch VICE with monitor and symbol file |
 
 #### Diagnostics
 
@@ -278,6 +282,7 @@ The plugin provides the following user commands:
 |---------|-------------|
 | `:C64Assemble` | Assemble the current file with Kick Assembler |
 | `:C64Run` | Run the current program in VICE emulator |
+| `:C64Debug` | Run the program in VICE with debug mode enabled |
 | `:C64Enable` | Manually enable c64.nvim for current buffer |
 | `:C64CreateMarker` | Create `.kickass` marker file in current directory |
 
@@ -416,6 +421,28 @@ Use `<leader>d` to see full diagnostics in a floating window.
 5. **Errors?** Telescope opens with clickable error list
 6. **Fix** errors and reassemble
 7. **Test**: Press `<leader>kr` to launch VICE and test your program
+8. **Debug**: Press `<leader>kd` to launch VICE with monitor and symbols loaded
+
+### Debugging with VICE Monitor
+
+When you press `<leader>kd`, the plugin:
+1. Starts VICE with the `-remotemonitor` flag (enables remote monitor on port 6510)
+2. Automatically loads your `.sym` symbol file with `-moncommands`
+3. Shows a notification with monitor activation instructions
+
+**In VICE:**
+- Press `Alt+H` to activate the monitor
+- Use your labels directly in monitor commands (e.g., `break Main`, `d loop`)
+- Monitor commands: `break`, `watch`, `d` (disassemble), `m` (memory), `r` (registers), `z` (continue)
+
+**Example debug session:**
+```
+(monitor) break Main          # Set breakpoint at Main label
+(monitor) z                   # Continue execution
+(monitor) r                   # Show registers
+(monitor) d Main Main+20      # Disassemble from Main to Main+$20
+(monitor) m $0400 $04ff       # Show screen memory
+```
 
 ### Using the C64 Reference
 

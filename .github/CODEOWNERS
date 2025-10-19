@@ -1,0 +1,14 @@
+# Code Owners for c64.nvim
+# These files require approval from the repository owner
+
+# Funding and sponsorship
+/.github/FUNDING.yml @cybersorcerer
+
+# GitHub workflows (security sensitive)
+/.github/workflows/* @cybersorcerer
+
+# Core plugin files (require owner review)
+/lua/c64/init.lua @cybersorcerer
+
+# License file
+/LICENSE @cybersorcerer

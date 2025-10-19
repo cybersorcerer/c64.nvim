@@ -73,6 +73,7 @@ M.config = {
   keymaps = {
     assemble = "<leader>ka",
     run_vice = "<leader>kr",
+    debug_vice = "<leader>kd",
     show_diagnostics = "<leader>d",
   },
 }

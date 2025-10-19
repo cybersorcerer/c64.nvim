@@ -13,6 +13,11 @@ function M.setup(config)
     require("c64.vice").run(config)
   end, { desc = "Run in VICE emulator", silent = true })
 
+  -- Debug in VICE emulator with monitor and symbols
+  vim.keymap.set("n", config.keymaps.debug_vice, function()
+    require("c64.vice").debug(config)
+  end, { desc = "Debug in VICE with monitor", silent = true })
+
   -- Show line diagnostics
   vim.keymap.set("n", config.keymaps.show_diagnostics, function()
     vim.diagnostic.open_float()

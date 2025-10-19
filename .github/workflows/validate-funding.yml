@@ -1,0 +1,33 @@
+name: Validate Funding Configuration
+
+on:
+  pull_request:
+    paths:
+      - '.github/FUNDING.yml'
+      - '.github/CODEOWNERS'
+
+jobs:
+  validate-funding:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate FUNDING.yml integrity
+        run: |
+          echo "Checking FUNDING.yml for unauthorized modifications..."
+
+          # Check if the correct GitHub username is present
+          if ! grep -q "github: cybersorcerer" .github/FUNDING.yml; then
+            echo "::error::FUNDING.yml has been modified with unauthorized GitHub username"
+            exit 1
+          fi
+
+          echo "✓ FUNDING.yml validation passed"
+
+      - name: Block unauthorized changes
+        if: failure()
+        run: |
+          echo "::error::Modifications to FUNDING.yml are not allowed"
+          echo "::error::This file is maintained by the repository owner only"
+          exit 1
