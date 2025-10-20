@@ -128,31 +128,6 @@ return {
 
 **No external dependencies required!** c64.nvim uses Neovim's native LSP (`vim.lsp.start`) and automatically detects nvim-cmp if installed.
 
-### Using Neovim's built-in package manager
-
-Create the plugin directory (if it doesn't exist):
-
-```bash
-mkdir -p ~/.local/share/nvim/site/pack/c64/start
-```
-
-Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/c64.nvim.git \
-  ~/.local/share/nvim/site/pack/c64/start/c64.nvim
-```
-
-Add to your `init.lua`:
-
-```lua
-require("c64").setup({
-  kickass_jar_path = vim.fn.expand("~/tools/kickass.jar"),
-})
-```
-
-Restart Neovim.
-
 ## Configuration
 
 ### Full Configuration Example
