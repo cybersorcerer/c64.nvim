@@ -18,6 +18,16 @@ function M.setup(config)
     require("c64.vice").debug(config)
   end, { desc = "Debug in VICE with monitor", silent = true })
 
+  -- Toggle VICE monitor (floating terminal)
+  vim.keymap.set("n", "<leader>km", function()
+    require("c64.vice").toggle_monitor(config)
+  end, { desc = "Toggle VICE monitor (floating)", silent = true })
+
+  -- Focus VICE monitor and enter insert mode
+  vim.keymap.set("n", "<leader>ki", function()
+    require("c64.vice").focus_monitor()
+  end, { desc = "Focus VICE monitor and enter insert", silent = true })
+
   -- Show line diagnostics
   vim.keymap.set("n", config.keymaps.show_diagnostics, function()
     vim.diagnostic.open_float()
@@ -43,9 +53,13 @@ function M.setup(config)
   -- Telescope integration for diagnostics (if available)
   local telescope_ok, _ = pcall(require, "telescope")
   if telescope_ok then
-    vim.keymap.set("n", "<leader>td", function()
+    vim.keymap.set("n", "<leader>dd", function()
+      require("telescope.builtin").diagnostics({ bufnr = 0 })
+    end, { desc = "Telescope: Show buffer diagnostics", silent = true })
+
+    vim.keymap.set("n", "<leader>dw", function()
       require("telescope.builtin").diagnostics()
-    end, { desc = "Telescope: Show diagnostics", silent = true })
+    end, { desc = "Telescope: Show workspace diagnostics", silent = true })
 
     vim.keymap.set("n", "<leader>ts", function()
       require("telescope.builtin").lsp_document_symbols()

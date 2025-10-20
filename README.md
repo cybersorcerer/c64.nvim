@@ -26,7 +26,7 @@ A comprehensive Neovim plugin for C64 Assembler development using Kick Assembler
   - **C64 Reference Manual Search** - Search and browse the complete C64 Programmer's Reference Guide directly in Neovim
   - Memory map browser
   - Register and constant lookup
-  - Telescope quickfix integration for assembly errors
+  - Neovim quickfix list integration with Telescope for assembly errors
 
 - **Diagnostic Display Modes**: Flexible diagnostic visualization
   - Virtual text mode (inline diagnostics)
@@ -35,6 +35,50 @@ A comprehensive Neovim plugin for C64 Assembler development using Kick Assembler
   - Easy toggle between modes
 
 - **Customizable**: Extensive configuration options for LSP, highlighting, and keybindings
+
+## Screenshots
+
+### LSP Completion with nvim-cmp
+
+![LSP Completion](screenshots/completion.png)
+
+Code completion with intelligent suggestions, inline documentation, and syntax highlighting powered by kickass_ls.
+
+### LSP Diagnostics
+
+![LSP Diagnostics](screenshots/diagnostics.png)
+
+Real-time diagnostics with custom icons showing errors, warnings, and hints. Features include branch distance validation, dead code detection, and C64-specific hardware analysis.
+
+### Telescope Diagnostics
+
+![Telescope Diagnostics](screenshots/diagnostics-telescope.png)
+
+Browse all diagnostics with Telescope (`<leader>dd` for current buffer, `<leader>dw` for workspace). Jump directly to any issue with preview.
+
+### Telescope Symbol Navigation
+
+![Telescope Symbols](screenshots/symbols.png)
+
+Quick symbol navigation with `<leader>ts`. Browse all constants, variables, functions, and labels in your document with live preview.
+
+### C64 Reference Manual (Work in Progress)
+
+![C64 Reference Search](screenshots/reference.png)
+
+Search the C64 Programmer's Reference Manual with `<leader>cr`. Find information about SID, VIC, memory maps, and more.
+
+![C64 Reference Chapter](screenshots/reference-rendered.png)
+
+Selected chapters open in a vertical split with full Markdown rendering for easy reading alongside your code.
+
+**Note:** The C64 Reference integration is currently work in progress and may be subject to changes.
+
+### Build Errors in Neovim Quickfix List
+
+![Neovim Quickfix List Integration](screenshots/quickfix.png)
+
+When assembly fails, errors are automatically parsed and loaded into Neovims's quickfix list and opened with Telescope. Jump directly to any error with preview.
 
 ## Prerequisites
 
@@ -279,7 +323,8 @@ This design ensures c64.nvim works harmoniously with your existing Neovim config
 | `<leader>cr` | C64 Reference | Search C64 Programmer's Reference Manual |
 | `<leader>cm` | Memory Map | Browse C64 memory map |
 | `<leader>cR` | Registers | Browse C64 registers and constants |
-| `<leader>td` | Telescope Diagnostics | Show all diagnostics (requires Telescope) |
+| `<leader>dd` | Buffer Diagnostics | Show diagnostics for current buffer only (requires Telescope) |
+| `<leader>dw` | Workspace Diagnostics | Show diagnostics for all buffers (requires Telescope) |
 | `<leader>ts` | Telescope Symbols | Show document symbols (requires Telescope) |
 
 ### LSP Keymaps
@@ -491,7 +536,7 @@ When you press `<leader>kd`, the plugin:
 
 - Verify your `kickass_jar_path` is correct
 - Ensure Java is installed: `java -version`
-- Check the error in the quickfix list: `:copen`
+- Check the error in the Neovim quickfix list: `:copen`
 
 ### VICE not launching
 
