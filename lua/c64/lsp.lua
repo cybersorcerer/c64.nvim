@@ -1,16 +1,19 @@
 -- LSP configuration for kickass_ls
+-- Uses native Neovim LSP (vim.lsp.start)
 
 local M = {}
 
 -- On_attach function for kickass_ls specific setup
--- Note: LSP keybindings should be configured globally via LspAttach autocmd
--- in your main LSP config to avoid conflicts and duplication
 local function on_attach(_, bufnr)
-  -- Enable completion triggered by <c-x><c-o>
-  vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+  -- Set omnifunc for completion (works with nvim-cmp or manual completion)
+  vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
+end
 
-  -- Kickass-specific LSP setup can go here if needed
-  -- For example, custom commands or buffer-local settings
+-- Find root directory for the LSP
+local function find_root_dir(bufnr)
+  local root_patterns = { '.git', '.kickass', 'kickass.cfg' }
+  local root = vim.fs.root(bufnr, root_patterns)
+  return root or vim.fn.getcwd()
 end
 
 function M.setup(config)
@@ -23,59 +26,30 @@ function M.setup(config)
     return
   end
 
-  -- Try using Neovim 0.11 native LSP configuration first
-  local has_native_lsp_config = vim.fn.has('nvim-0.11') == 1
+  -- Setup LSP using native vim.lsp.start() on FileType
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'kickass',
+    callback = function(args)
+      local bufnr = args.buf
+      local root_dir = find_root_dir(bufnr)
 
-  if has_native_lsp_config then
-    -- Use Neovim 0.11+ native vim.lsp.config
-    vim.lsp.config('kickass_ls', {
-      cmd = { config.kickass_ls_binary },
-      filetypes = { 'kickass' },
-      root_markers = { '.git', '.kickass', 'kickass.cfg' },
-      settings = config.lsp.settings,
-      on_attach = on_attach,
-    })
-
-    -- Enable the language server for kickass filetype
-    vim.api.nvim_create_autocmd('FileType', {
-      pattern = 'kickass',
-      callback = function()
-        vim.lsp.enable('kickass_ls')
-      end,
-    })
-  else
-    -- Fallback to nvim-lspconfig for older Neovim versions or when using mason
-    local ok, lspconfig = pcall(require, "lspconfig")
-    if not ok then
-      vim.notify("nvim-lspconfig not found. Please install it to use kickass_ls LSP.", vim.log.levels.ERROR)
-      return
-    end
-
-    -- Register kickass_ls as a custom server if not already registered
-    local configs = require('lspconfig.configs')
-    if not configs.kickass_ls then
-      configs.kickass_ls = {
-        default_config = {
-          cmd = { config.kickass_ls_binary },
-          filetypes = { 'kickass' },
-          root_dir = lspconfig.util.root_pattern('.git', '.kickass', 'kickass.cfg'),
-          settings = config.lsp.settings or {},
-          on_attach = on_attach,
+      -- Start the LSP client
+      local client_id = vim.lsp.start({
+        name = 'kickass_ls',
+        cmd = { config.kickass_ls_binary },
+        root_dir = root_dir,
+        settings = config.lsp.settings,
+        on_attach = on_attach,
+        flags = {
+          debounce_text_changes = 150,
         },
-      }
-    end
+      })
 
-    -- Setup kickass_ls with user configuration
-    -- This integrates with mason-lspconfig handlers if they exist
-    lspconfig.kickass_ls.setup({
-      cmd = { config.kickass_ls_binary },
-      settings = config.lsp.settings,
-      on_attach = on_attach,
-      flags = {
-        debounce_text_changes = 150,
-      },
-    })
-  end
+      if not client_id then
+        vim.notify("Failed to start kickass_ls", vim.log.levels.ERROR)
+      end
+    end,
+  })
 end
 
 return M

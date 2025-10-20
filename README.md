@@ -40,15 +40,20 @@ A comprehensive Neovim plugin for C64 Assembler development using Kick Assembler
 
 Before installing c64.nvim, ensure you have the following:
 
-1. **Neovim 0.11+** - Required for LSP features
+1. **Neovim 0.11+** - Required for native LSP features
 2. **Java Runtime** - Required to run Kick Assembler
 3. **Kick Assembler (kickass.jar)** - [Download here](http://theweb.dk/KickAssembler/)
 4. **VICE Emulator** - [Download here](https://vice-emu.sourceforge.io/)
    - The `x64` binary must be in your PATH
 5. **kickass_ls Language Server** - [Available here](https://github.com/cybersorcerer/kickass_ls)
    - The `kickass_ls` binary must be in your PATH
-6. **nvim-lspconfig** - Required for LSP setup
-7. **telescope.nvim** (optional) - For enhanced UI features
+6. **telescope.nvim** (optional) - For enhanced UI features
+
+### Optional Dependencies
+
+- **nvim-cmp** - If installed, c64.nvim will automatically integrate with it for enhanced completion
+  - When not installed, c64.nvim uses Neovim's native completion system
+  - No additional configuration needed - auto-detection handles everything
 
 ## Installation
 
@@ -60,8 +65,8 @@ Add this to your lazy.nvim plugin configuration (usually in `~/.config/nvim/lua/
 return {
   "cybersorcerer/c64.nvim",
   dependencies = {
-    "neovim/nvim-lspconfig", -- Required for LSP integration
     "nvim-telescope/telescope.nvim", -- Optional, for enhanced UI
+    "hrsh7th/nvim-cmp", -- Optional, for enhanced completion (auto-detected)
   },
   ft = { "kickass" }, -- Lazy load only for Kick Assembler files
   config = function()
@@ -77,9 +82,7 @@ return {
 }
 ```
 
-**Note for Neovim 0.11+**: If you're using Neovim 0.11 or later, nvim-lspconfig is optional as c64.nvim uses the native `vim.lsp.config` API. However, it's still recommended for compatibility.
-
-**Integration with existing LSP setup**: If you already have a centralized LSP configuration (e.g., using mason-lspconfig), c64.nvim will automatically integrate with it. Your global `LspAttach` autocmd will handle all keybindings for kickass_ls as well.
+**No external dependencies required!** c64.nvim uses Neovim's native LSP (`vim.lsp.start`) and automatically detects nvim-cmp if installed.
 
 ### Using Neovim's built-in package manager
 
@@ -94,13 +97,6 @@ Clone the repository:
 ```bash
 git clone https://github.com/yourusername/c64.nvim.git \
   ~/.local/share/nvim/site/pack/c64/start/c64.nvim
-```
-
-Install nvim-lspconfig as well:
-
-```bash
-git clone https://github.com/neovim/nvim-lspconfig.git \
-  ~/.local/share/nvim/site/pack/c64/start/nvim-lspconfig
 ```
 
 Add to your `init.lua`:
@@ -130,6 +126,13 @@ require("c64").setup({
 
   -- LSP configuration
   lsp = {
+    -- Completion mode: 'auto' (default), 'native', 'external', 'none'
+    -- 'auto': Auto-detects nvim-cmp and uses it if available, otherwise native completion
+    -- 'native': Forces Neovim native completion (vim.lsp.completion)
+    -- 'external': Uses external completion plugin (e.g., nvim-cmp) only
+    -- 'none': Disables completion
+    completion = 'auto',
+
     settings = {
       kickass_ls = {
         warnUnusedLabels = false,
@@ -198,33 +201,54 @@ require("c64").setup({
 })
 ```
 
+### Completion
+
+c64.nvim sets `omnifunc` for LSP completion and works seamlessly with:
+
+- **nvim-cmp** (recommended) - automatic integration
+- **Manual completion** - trigger with `<C-x><C-o>`
+
+### Important: Avoiding Dual Completion Menus
+
+If you have a **global LspAttach autocmd** that enables native completion for all LSP clients, you may see **duplicate completion menus** (one from native completion, one from nvim-cmp).
+
+**Solution**: Skip kickass_ls in your global completion setup:
+
+```lua
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+
+    -- Skip native completion for kickass_ls (uses nvim-cmp)
+    if client and client.name == "kickass_ls" then
+      return
+    end
+
+    -- Enable native completion for other LSP clients
+    if client:supports_method("textDocument/completion") then
+      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+    end
+  end,
+})
+```
+
 ### Integration with Existing LSP Setup
 
-If you already have a centralized LSP configuration (e.g., using `mason-lspconfig` or a global `LspAttach` autocmd), c64.nvim will integrate seamlessly:
+c64.nvim uses **native Neovim LSP** (`vim.lsp.start`) and integrates seamlessly with your existing setup:
 
-#### Option 1: Let c64.nvim handle everything (recommended for most users)
-
-- Just call `require("c64").setup()` as shown above
-- c64.nvim will register kickass_ls and configure it automatically
-- Your existing global LSP keybindings will work with kickass_ls
-
-#### Option 2: Integrate with mason-lspconfig handlers
-
-If you're using mason-lspconfig with custom handlers, you don't need to do anything special. c64.nvim registers kickass_ls as a custom server that works with your existing setup.
-
-#### What c64.nvim configures
+**What c64.nvim configures:**
 
 - LSP server registration and activation
 - Diagnostic signs and virtual text styling
-- Hover and signature help borders
 - Semantic token highlighting for Kick Assembler
+- Completion (based on `completion` mode)
 
-#### What c64.nvim does NOT configure
+**What c64.nvim does NOT configure:**
 
 - LSP keybindings (uses your global `LspAttach` autocmd)
 - General diagnostic behavior (only adds c64-specific enhancements)
 
-This design ensures c64.nvim works harmoniously with your existing Neovim configuration.
+This design ensures c64.nvim works harmoniously with your existing Neovim configuration without requiring nvim-lspconfig.
 
 ## Keybindings
 
@@ -426,17 +450,20 @@ Use `<leader>d` to see full diagnostics in a floating window.
 ### Debugging with VICE Monitor
 
 When you press `<leader>kd`, the plugin:
+
 1. Starts VICE with the `-remotemonitor` flag (enables remote monitor on port 6510)
 2. Automatically loads your `.sym` symbol file with `-moncommands`
 3. Shows a notification with monitor activation instructions
 
 **In VICE:**
+
 - Press `Alt+H` to activate the monitor
 - Use your labels directly in monitor commands (e.g., `break Main`, `d loop`)
 - Monitor commands: `break`, `watch`, `d` (disassemble), `m` (memory), `r` (registers), `z` (continue)
 
 **Example debug session:**
-```
+
+```monitor
 (monitor) break Main          # Set breakpoint at Main label
 (monitor) z                   # Continue execution
 (monitor) r                   # Show registers
