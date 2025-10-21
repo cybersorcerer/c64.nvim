@@ -1,10 +1,10 @@
 # c64.nvim
 
-A comprehensive Neovim plugin for C64 Assembler development using Kick Assembler, featuring LSP support, VICE emulator integration, and helpful development tools.
+A Neovim plugin for C64 Assembler development using Kick Assembler, featuring LSP support, VICE emulator integration, and helpful development tools. Made with Love for the Retro Computing Community.
 
 ## Features
 
-- **LSP Integration**: Full Language Server Protocol support via [kickass_ls](https://github.com/cybersorcerer/kickass_ls)
+- **LSP Integration**: Full Language Server Protocol support via a Kick Assembler Language Server i created alongside this project [kickass_ls](https://github.com/cybersorcerer/kickass_ls)
   - Semantic token highlighting
   - Real-time diagnostics
   - Code completion
@@ -42,19 +42,19 @@ A comprehensive Neovim plugin for C64 Assembler development using Kick Assembler
 
 ![LSP Completion](screenshots/completion.png)
 
-Code completion with intelligent suggestions, inline documentation, and syntax highlighting powered by kickass_ls.
+Code completion with intelligent suggestions, inline documentation, and syntax highlighting powered by the Kick Assembler Language Server i created: [kickass_ls](https://github.com/cybersorcerer/kickass_ls).
 
 ### LSP Diagnostics
 
 ![LSP Diagnostics](screenshots/diagnostics.png)
 
-Real-time diagnostics with custom icons showing errors, warnings, and hints. Features include branch distance validation, dead code detection, and C64-specific hardware analysis.
+Real-time diagnostics with custom icons showing errors, warnings, and hints. Features include branch distance validation, dead code detection, and C64-specific hardware analysis. All powered by the Kick Assembler Language Server i created: [kickass_ls](https://github.com/cybersorcerer/kickass_ls).
 
 ### Telescope Diagnostics
 
 ![Telescope Diagnostics](screenshots/diagnostics-telescope.png)
 
-Browse all diagnostics with Telescope (`<leader>dd` for current buffer, `<leader>dw` for workspace). Jump directly to any issue with preview.
+Browse all diagnostics with Telescope (`<leader>dd` for current buffer, `<leader>dw` for workspace). Jump directly to any issue with preview. Diagnostics created by the Kick Assembler Language Server i created: [kickass_ls](https://github.com/cybersorcerer/kickass_ls).
 
 ### Telescope Symbol Navigation
 
@@ -74,11 +74,17 @@ Selected chapters open in a vertical split with full Markdown rendering for easy
 
 **Note:** The C64 Reference integration is currently work in progress and may be subject to changes.
 
-### Build Errors in Neovim Quickfix List
+### Build Errors in Quickfix
 
-![Neovim Quickfix List Integration](screenshots/quickfix.png)
+![Quickfix Integration](screenshots/quickfix.png)
 
-When assembly fails, errors are automatically parsed and loaded into Neovims's quickfix list and opened with Telescope. Jump directly to any error with preview.
+When assembly fails, errors are automatically parsed and loaded into Telescope's quickfix list. Jump directly to any error with preview.
+
+### VICE Remote Monitor
+
+![VICE Monitor](screenshots/monitor.png)
+
+Debug your programs with the VICE remote monitor in a floating terminal. Supports symbol files, breakpoints, memory inspection, and all VICE monitor commands.
 
 ## Prerequisites
 
@@ -125,8 +131,6 @@ return {
   end,
 }
 ```
-
-**No external dependencies required!** c64.nvim uses Neovim's native LSP (`vim.lsp.start`) and automatically detects nvim-cmp if installed.
 
 ## Configuration
 
@@ -525,10 +529,13 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## License
 
-MIT
+Apache 2.0
 
 ## Credits
 
 - Built for [Kick Assembler](http://theweb.dk/KickAssembler/) by Mads Nielsen
 - Integrates with [VICE Emulator](https://vice-emu.sourceforge.io/)
 - Uses [kickass_ls](https://github.com/cybersorcerer/kickass_ls) Language Server
+- Uses Documentation from the great Retro Community
+  - The Commodore Reference Guide by **\[PS(hv)\]** which you can find [here](https://pickledlight.blogspot.com/p/retro-computing-c64-projects.html)
+- Data from [The Commodore 64 Memory Map](https://sta.c64.org/cbm64mem.html)

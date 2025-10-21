@@ -68,7 +68,10 @@ local function cleanup_monitor_session()
 end
 
 -- Create floating window for monitor terminal
-local function create_floating_window(buf, enter)
+local function create_floating_window(buf, enter, title)
+	-- Set up custom highlight for VICE monitor title (bold)
+	vim.api.nvim_set_hl(0, "ViceMonitorTitle", { bold = true, fg = "#89b4fa" })
+
 	-- Get editor dimensions
 	local width = vim.o.columns
 	local height = vim.o.lines
@@ -87,7 +90,8 @@ local function create_floating_window(buf, enter)
 		enter = true
 	end
 
-	local win = vim.api.nvim_open_win(buf, enter, {
+	-- Prepare title if provided
+	local win_opts = {
 		relative = "editor",
 		width = win_width,
 		height = win_height,
@@ -95,7 +99,15 @@ local function create_floating_window(buf, enter)
 		col = col,
 		style = "minimal",
 		border = "rounded",
-	})
+	}
+
+	-- Add title if provided with custom highlight
+	if title then
+		win_opts.title = { { title, "ViceMonitorTitle" } }
+		win_opts.title_pos = "center"
+	end
+
+	local win = vim.api.nvim_open_win(buf, enter, win_opts)
 
 	return win
 end
@@ -208,8 +220,15 @@ function M.toggle_monitor(config)
 		local term_buf = vim.api.nvim_create_buf(false, true)
 		monitor_state.terminal_buf = term_buf
 
+		-- Create title with program name and Nerd Font icon
+		local prg_name = vim.fn.fnamemodify(files.prg, ":t")
+		-- Nerd Font icon: nf-md-desktop_classic
+		-- Using direct hex code point
+		local icon = "󰟀" -- U+F07C0 nf-md-desktop_classic
+		local title = string.format("%s [ VICE Remote Monitor %s ]", icon, prg_name)
+
 		-- Create floating window WITHOUT focusing it first (enter = false)
-		monitor_state.terminal_win = create_floating_window(term_buf, false)
+		monitor_state.terminal_win = create_floating_window(term_buf, false, title)
 
 		-- Create a wrapper script that adds header and sets colors
 		local wrapper_cmd = string.format([[
@@ -217,8 +236,8 @@ function M.toggle_monitor(config)
       printf '\033[1;94m║  VICE Monitor - Hide: <Esc><leader>km  Close: <esc>:q            ║\033[0m\n'
       printf '\033[1;94m╚══════════════════════════════════════════════════════════════════╝\033[0m\n'
       printf '\n'
-      # Set yellow as default foreground color, then REPLACE shell with netcat
-      printf '\033[93m'
+      # Set BOLD yellow (1;33m) as default foreground color, then REPLACE shell with netcat
+      printf '\033[1;33m'
       printf 'Connecting to VICE monitor...\n'
       # Give VICE a moment to be ready
       sleep 2

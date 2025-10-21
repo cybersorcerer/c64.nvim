@@ -3,6 +3,16 @@
 local M = {}
 
 function M.setup(config)
+  -- which-key.nvim integration (optional, auto-detected if installed)
+  local wk_ok, wk = pcall(require, "which-key")
+  if wk_ok then
+    wk.add({
+      { "<leader>k", group = "C64 Assembler" },
+      { "<leader>d", group = "Diagnostics" },
+      { "<leader>c", group = "C64 Reference" },
+    })
+  end
+
   -- Assemble current file
   vim.keymap.set("n", config.keymaps.assemble, function()
     require("c64.assembler").assemble(config)
