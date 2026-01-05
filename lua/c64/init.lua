@@ -76,6 +76,13 @@ M.config = {
     debug_vice = "<leader>kd",
     show_diagnostics = "<leader>d",
   },
+
+  -- C64 Ultimate integration
+  c64u = {
+    enabled = false,  -- Set to true to enable C64 Ultimate integration
+    host = nil,       -- C64U hostname/IP (uses c64u CLI config if nil)
+    port = nil,       -- HTTP port (uses c64u CLI config if nil)
+  },
 }
 
 -- Setup function

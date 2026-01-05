@@ -34,6 +34,13 @@ A Neovim plugin for C64 Assembler development using Kick Assembler, featuring LS
   - Signs only mode (minimal clutter)
   - Easy toggle between modes
 
+- **C64 Ultimate Integration**: Direct hardware deployment (NEW!)
+  - Upload and run programs on real C64 Ultimate hardware
+  - One-command workflow: assemble → upload → run
+  - Drive management (mount/unmount disk images)
+  - Machine control (reset, memory operations)
+  - Works with both Ultimate64 and Ultimate-II+ hardware
+
 - **Customizable**: Extensive configuration options for LSP, highlighting, and keybindings
 
 ## Screenshots
@@ -105,9 +112,16 @@ Before installing c64.nvim, ensure you have the following:
   - When not installed, c64.nvim uses Neovim's native completion system
   - No additional configuration needed - auto-detection handles everything
 
+- **c64u CLI** - For C64 Ultimate hardware integration ([See tools/c64u](tools/c64u/README.md))
+  - Enables direct upload to C64 Ultimate hardware
+  - Drive management and machine control from Neovim
+  - See [Installing c64u CLI](#installing-c64u-cli) below for installation options
+
 ## Installation
 
-### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
+### Installing c64.nvim Plugin
+
+#### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 Add this to your lazy.nvim plugin configuration (usually in `~/.config/nvim/lua/plugins/` or in your `init.lua`):
 
@@ -131,6 +145,111 @@ return {
   end,
 }
 ```
+
+### Installing c64u CLI
+
+The c64u CLI tool enables direct interaction with C64 Ultimate hardware from Neovim. You can install it either by downloading pre-built binaries or by building from source.
+
+#### Option 1: Download Pre-built Binary (Recommended)
+
+Download the appropriate binary for your platform from the [GitHub Releases](https://github.com/cybersorcerer/c64.nvim/releases) page:
+
+**macOS:**
+
+```bash
+# For Apple Silicon (M1/M2/M3)
+curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-darwin-arm64
+chmod +x c64u
+sudo mv c64u /usr/local/bin/
+
+# For Intel Macs
+curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-darwin-amd64
+chmod +x c64u
+sudo mv c64u /usr/local/bin/
+```
+
+**Linux:**
+
+```bash
+# For x86_64
+curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-linux-amd64
+chmod +x c64u
+sudo mv c64u /usr/local/bin/
+
+# For ARM64 (e.g., Raspberry Pi)
+curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-linux-arm64
+chmod +x c64u
+sudo mv c64u /usr/local/bin/
+```
+
+**Windows:**
+
+```powershell
+# Download from: https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-windows-amd64.exe
+# Rename to c64u.exe and add to your PATH
+```
+
+#### Option 2: Build from Source
+
+Requirements:
+
+- Go 1.22 or later
+
+```bash
+cd tools/c64u
+make install
+```
+
+This will build and install c64u to `~/.local/bin/` (make sure it's in your PATH).
+
+#### Verify Installation
+
+```bash
+c64u version
+```
+
+#### Configure c64u
+
+Create a configuration file at `~/.config/c64u/config.toml`:
+
+```toml
+# C64 Ultimate hostname or IP address
+host = "c64u.local"  # or use IP like "192.168.1.100"
+
+# HTTP port (default: 80)
+port = 80
+```
+
+Alternatively, use environment variables:
+
+```bash
+export C64U_HOST="c64u.local"
+export C64U_PORT=80
+```
+
+Or specify on the command line:
+
+```bash
+c64u --host c64u.local --port 80 about
+```
+
+#### Enable in c64.nvim
+
+Once c64u is installed and configured, enable it in your c64.nvim configuration:
+
+```lua
+require("c64").setup({
+  -- ... other config ...
+
+  c64u = {
+    enabled = true,                    -- Enable C64 Ultimate integration
+    host = nil,                        -- Use c64u CLI config (recommended)
+    port = nil,                        -- Use c64u CLI config (recommended)
+  },
+})
+```
+
+Now you can use the C64 Ultimate keymaps (`<leader>ku*`) to upload, run, and manage your programs on real hardware!
 
 ## Configuration
 
@@ -221,6 +340,13 @@ require("c64").setup({
     debug_vice = "<leader>kd",
     show_diagnostics = "<leader>d",
   },
+
+  -- C64 Ultimate integration (optional)
+  c64u = {
+    enabled = true,                         -- Enable C64 Ultimate integration
+    host = "c64u.homelab.local",           -- C64U hostname/IP (nil = use c64u CLI config)
+    port = 80,                             -- HTTP port (nil = use c64u CLI config)
+  },
 })
 ```
 
@@ -304,7 +430,20 @@ This design ensures c64.nvim works harmoniously with your existing Neovim config
 | `<leader>cR` | Registers | Browse C64 registers and constants |
 | `<leader>dd` | Buffer Diagnostics | Show diagnostics for current buffer only (requires Telescope) |
 | `<leader>dw` | Workspace Diagnostics | Show diagnostics for all buffers (requires Telescope) |
-| `<leader>ts` | Telescope Symbols | Show document symbols (requires Telescope) |
+| `<leader>cs` | Telescope Symbols | Show document symbols (requires Telescope) |
+
+#### C64 Ultimate (requires c64u CLI and enabled in config)
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>kuR` | Assemble & Upload | Assemble and upload to C64 Ultimate, then run |
+| `<leader>kur` | Upload & Run | Upload existing PRG and run on C64 Ultimate |
+| `<leader>kuu` | Upload Only | Upload PRG without running |
+| `<leader>kux` | Reset | Reset C64 Ultimate machine |
+| `<leader>kuv` | Version | Show C64 Ultimate API version |
+| `<leader>kul` | List Drives | Show all drives and mounted images |
+| `<leader>kum` | Mount Disk | Mount disk image (prompts for details) |
+| `<leader>kuU` | Unmount Disk | Unmount disk from drive |
 
 ### LSP Keymaps
 

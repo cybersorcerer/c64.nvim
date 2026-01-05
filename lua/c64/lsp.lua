@@ -36,7 +36,7 @@ function M.setup(config)
       -- Start the LSP client
       local client_id = vim.lsp.start({
         name = 'kickass_ls',
-        cmd = { config.kickass_ls_binary },
+        cmd = { config.kickass_ls_binary, '--debug' },
         root_dir = root_dir,
         settings = config.lsp.settings,
         on_attach = on_attach,
