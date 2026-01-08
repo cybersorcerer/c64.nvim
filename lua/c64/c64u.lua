@@ -1,5 +1,6 @@
 -- C64 Ultimate integration module
--- Provides functions to interact with C64 Ultimate hardware via c64u CLI
+-- Provides basic functions to interact with C64 Ultimate hardware via c64u CLI
+-- For advanced features (drives, PRG upload), use the Telescope extension
 
 local M = {}
 
@@ -53,124 +54,9 @@ local function exec_c64u(args, opts)
 	return output
 end
 
--- Upload and run PRG file on C64 Ultimate
-function M.upload_and_run(config, prg_file)
-	if not prg_file or prg_file == "" then
-		vim.notify("No PRG file specified", vim.log.levels.ERROR)
-		return
-	end
-
-	-- Check if file exists
-	if vim.fn.filereadable(prg_file) ~= 1 then
-		vim.notify(string.format("PRG file not found: %s", prg_file), vim.log.levels.ERROR)
-		return
-	end
-
-	vim.notify(string.format("Uploading and running: %s", vim.fn.fnamemodify(prg_file, ":t")), vim.log.levels.INFO)
-
-	local output = exec_c64u({ "runners", "run-prg-upload", prg_file }, config.c64u)
-
-	if output then
-		vim.notify("Program uploaded and running on C64 Ultimate!", vim.log.levels.INFO)
-	end
-end
-
--- Upload PRG file without running
-function M.upload_only(config, prg_file)
-	if not prg_file or prg_file == "" then
-		vim.notify("No PRG file specified", vim.log.levels.ERROR)
-		return
-	end
-
-	-- Check if file exists
-	if vim.fn.filereadable(prg_file) ~= 1 then
-		vim.notify(string.format("PRG file not found: %s", prg_file), vim.log.levels.ERROR)
-		return
-	end
-
-	vim.notify(string.format("Uploading: %s", vim.fn.fnamemodify(prg_file, ":t")), vim.log.levels.INFO)
-
-	local output = exec_c64u({ "runners", "load-prg-upload", prg_file }, config.c64u)
-
-	if output then
-		vim.notify("Program uploaded to C64 Ultimate!", vim.log.levels.INFO)
-	end
-end
-
--- Reset C64 Ultimate
-function M.reset(config)
-	vim.notify("Resetting C64 Ultimate...", vim.log.levels.INFO)
-
-	local output = exec_c64u({ "machine", "reset" }, config.c64u)
-
-	if output then
-		vim.notify("C64 Ultimate reset complete", vim.log.levels.INFO)
-	end
-end
-
--- Assemble current file and upload to C64 Ultimate
-function M.assemble_and_run(config)
-	local current_file = vim.fn.expand("%:p")
-	local prg_file = vim.fn.expand("%:p:r") .. ".prg"
-
-	-- First, assemble the file
-	vim.notify("Assembling: " .. vim.fn.fnamemodify(current_file, ":t"), vim.log.levels.INFO)
-
-	local assembler = require("c64.assembler")
-	assembler.assemble(config)
-
-	-- Wait a bit for assembly to complete
-	vim.defer_fn(function()
-		-- Check if PRG was created
-		if vim.fn.filereadable(prg_file) == 1 then
-			M.upload_and_run(config, prg_file)
-		else
-			vim.notify("Assembly failed - no PRG file created", vim.log.levels.ERROR)
-		end
-	end, 500)
-end
-
--- Mount disk image
-function M.mount_disk(config, drive, image_file, mode)
-	drive = drive or "8"
-	mode = mode or "readonly"
-
-	if not image_file or image_file == "" then
-		vim.notify("No disk image specified", vim.log.levels.ERROR)
-		return
-	end
-
-	-- Check if file exists
-	if vim.fn.filereadable(image_file) ~= 1 then
-		vim.notify(string.format("Disk image not found: %s", image_file), vim.log.levels.ERROR)
-		return
-	end
-
-	vim.notify(string.format("Mounting %s to drive %s...", vim.fn.fnamemodify(image_file, ":t"), drive), vim.log.levels.INFO)
-
-	local output = exec_c64u({ "drives", "mount-upload", drive, image_file, "--mode", mode }, config.c64u)
-
-	if output then
-		vim.notify(string.format("Disk mounted to drive %s", drive), vim.log.levels.INFO)
-	end
-end
-
--- Unmount disk
-function M.unmount_disk(config, drive)
-	drive = drive or "8"
-
-	vim.notify(string.format("Unmounting drive %s...", drive), vim.log.levels.INFO)
-
-	local output = exec_c64u({ "drives", "unmount", drive }, config.c64u)
-
-	if output then
-		vim.notify(string.format("Drive %s unmounted", drive), vim.log.levels.INFO)
-	end
-end
-
 -- Get C64 Ultimate API version
 function M.get_version(config)
-	local output = exec_c64u({ "about", "--json" }, vim.tbl_extend("force", config.c64u or {}, { json = true }))
+	local output = exec_c64u({ "about" }, vim.tbl_extend("force", config.c64u or {}, { json = true }))
 
 	if output then
 		local ok, data = pcall(vim.json.decode, output)
@@ -182,47 +68,148 @@ function M.get_version(config)
 	end
 end
 
--- List drives
-function M.list_drives(config)
-	local output = exec_c64u({ "drives", "list" }, config.c64u)
+-- Create directory on C64U partition
+function M.create_partition_directory(config)
+	-- Get drives list to show available partitions
+	local output = exec_c64u({ "drives", "list" }, vim.tbl_extend("force", config.c64u or {}, { json = true }))
 
-	if output then
-		-- Open output in a floating window or buffer
-		local buf = vim.api.nvim_create_buf(false, true)
-		local lines = vim.split(output, "\n")
-		vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-
-		-- Get editor dimensions
-		local width = math.floor(vim.o.columns * 0.8)
-		local height = math.min(#lines + 2, math.floor(vim.o.lines * 0.6))
-
-		-- Calculate position
-		local row = math.floor((vim.o.lines - height) / 2)
-		local col = math.floor((vim.o.columns - width) / 2)
-
-		-- Create floating window
-		local opts = {
-			relative = "editor",
-			width = width,
-			height = height,
-			row = row,
-			col = col,
-			style = "minimal",
-			border = "rounded",
-			title = " C64 Ultimate Drives ",
-			title_pos = "center",
-		}
-
-		local win = vim.api.nvim_open_win(buf, true, opts)
-
-		-- Set buffer options
-		vim.bo[buf].buftype = "nofile"
-		vim.bo[buf].bufhidden = "wipe"
-		vim.bo[buf].filetype = "text"
-
-		-- Close on q
-		vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = buf, nowait = true })
+	if not output then
+		return
 	end
+
+	local ok, data = pcall(vim.json.decode, output)
+	if not ok or not data or not data.drives then
+		vim.notify("Failed to get drives list", vim.log.levels.ERROR)
+		return
+	end
+
+	-- Extract partitions from drives
+	local partitions = {}
+	for _, drive_data in ipairs(data.drives) do
+		local drive_name, drive_info = next(drive_data)
+		if drive_info and drive_info.partitions then
+			for _, partition in ipairs(drive_info.partitions) do
+				if partition.path then
+					table.insert(partitions, {
+						path = partition.path,
+						id = partition.id,
+						drive = drive_name,
+					})
+				end
+			end
+		end
+	end
+
+	if #partitions == 0 then
+		vim.notify("No partitions found. Enable IEC Drive first.", vim.log.levels.WARN)
+		return
+	end
+
+	-- Select partition
+	local partition_labels = {}
+	for _, p in ipairs(partitions) do
+		table.insert(partition_labels, string.format("%s (Drive: %s)", p.path, p.drive))
+	end
+
+	vim.ui.select(partition_labels, {
+		prompt = "Select partition:",
+	}, function(choice, idx)
+		if not choice then
+			return
+		end
+
+		local selected_partition = partitions[idx]
+
+		-- Prompt for directory name
+		vim.ui.input({
+			prompt = "Directory name: ",
+			default = "NEWDIR"
+		}, function(dirname)
+			if not dirname or dirname == "" then
+				return
+			end
+
+			-- Create directory path
+			local dir_path = selected_partition.path .. dirname
+
+			-- Use Lua's filesystem to create directory
+			local success, err = pcall(vim.fn.mkdir, dir_path, "p")
+
+			if success then
+				vim.notify(string.format("Created directory: %s", dir_path), vim.log.levels.INFO)
+			else
+				vim.notify(string.format("Failed to create directory: %s", err or "unknown error"), vim.log.levels.ERROR)
+			end
+		end)
+	end)
+end
+
+-- Create a new disk image
+function M.create_disk_image(config)
+	-- Select disk image type
+	vim.ui.select({ "d64 (35 tracks)", "d64 (40 tracks)", "d71 (70 tracks)", "d81 (160 tracks)", "dnp (custom tracks)" }, {
+		prompt = "Select disk image type:",
+	}, function(choice)
+		if not choice then
+			return
+		end
+
+		-- Extract type
+		local image_type = choice:match("^(%w+)")
+
+		-- Prompt for filename
+		vim.ui.input({
+			prompt = "Disk image filename (without extension): ",
+			default = "disk"
+		}, function(filename)
+			if not filename or filename == "" then
+				return
+			end
+
+			-- Add extension
+			local full_path = filename .. "." .. image_type
+
+			-- Prompt for disk name (label)
+			vim.ui.input({
+				prompt = "Disk name/label (max 16 chars): ",
+				default = string.upper(filename:sub(1, 16))
+			}, function(disk_name)
+				if not disk_name or disk_name == "" then
+					disk_name = string.upper(filename:sub(1, 16))
+				end
+
+				local cmd_args = { "files", "create-" .. image_type, full_path, "--name", disk_name }
+
+				-- Special handling for d64 40-track and dnp
+				if choice:match("40 tracks") then
+					table.insert(cmd_args, "--tracks")
+					table.insert(cmd_args, "40")
+				elseif image_type == "dnp" then
+					vim.ui.input({
+						prompt = "Number of tracks (1-255): ",
+						default = "35"
+					}, function(tracks)
+						if not tracks or tracks == "" then
+							return
+						end
+						table.insert(cmd_args, "--tracks")
+						table.insert(cmd_args, tracks)
+
+						local output = exec_c64u(cmd_args, config.c64u)
+						if output then
+							vim.notify(string.format("Created %s disk image: %s", image_type:upper(), full_path), vim.log.levels.INFO)
+						end
+					end)
+					return
+				end
+
+				local output = exec_c64u(cmd_args, config.c64u)
+				if output then
+					vim.notify(string.format("Created %s disk image: %s", image_type:upper(), full_path), vim.log.levels.INFO)
+				end
+			end)
+		end)
+	end)
 end
 
 return M

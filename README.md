@@ -437,13 +437,36 @@ This design ensures c64.nvim works harmoniously with your existing Neovim config
 | Key | Action | Description |
 |-----|--------|-------------|
 | `<leader>kuR` | Assemble & Upload | Assemble and upload to C64 Ultimate, then run |
-| `<leader>kur` | Upload & Run | Upload existing PRG and run on C64 Ultimate |
-| `<leader>kuu` | Upload Only | Upload PRG without running |
-| `<leader>kux` | Reset | Reset C64 Ultimate machine |
+| `<leader>kuu` | Upload PRG | Telescope picker to select and upload PRG file |
+| `<leader>kud` | File Browser | FTP file browser for C64 Ultimate filesystem |
+| `<leader>kux` | Machine Control | Telescope picker for machine operations (reset/reboot/pause/resume/poweroff) |
 | `<leader>kuv` | Version | Show C64 Ultimate API version |
-| `<leader>kul` | List Drives | Show all drives and mounted images |
-| `<leader>kum` | Mount Disk | Mount disk image (prompts for details) |
-| `<leader>kuU` | Unmount Disk | Unmount disk from drive |
+| `<leader>kuc` | Create Disk Image | Create disk image (d64/d71/d81/dnp) |
+| `<leader>kum` | Create Directory | Create directory on C64U partition |
+
+**FTP File Browser (`<leader>kud`):**
+
+**Prerequisites:** Requires an FTP client (`ftp` or `ftp.exe`) in your PATH.
+
+Navigation:
+
+- `Enter` on directory - Navigate into directory
+- `Enter` on file - Show file information
+- `..` entry - Navigate to parent directory
+
+Operations:
+
+- `Ctrl+c` - Create disk image (d64/d71/d81/dnp) in current directory
+- `Ctrl+d` - Create new directory via FTP
+- `Ctrl+m` - Mount selected disk image (drive name extracted from path)
+- `Ctrl+u` - Unmount disk image from drive
+
+**Machine Control (`<leader>kux`):**
+
+- `Enter` - Execute selected command (picker stays open for multiple operations)
+- Available operations: Reset, Reboot, Pause, Resume, Power Off (U64 only)
+- `Esc` - Close the picker
+- `Ctrl-c` - Close the picker (alternative)
 
 ### LSP Keymaps
 

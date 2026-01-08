@@ -94,6 +94,18 @@ func (c *Client) MachineDebugRegSet(value string) (*Response, error) {
 	return c.Put("/v1/machine:debugreg", params)
 }
 
+// MachineMenuButton simulates pressing the Menu button
+// On 1541 Ultimate cartridge, this is the Menu button
+// On Ultimate 64, this is a brief press of the Multi Button
+func (c *Client) MachineMenuButton() (*Response, error) {
+	return c.Put("/v1/machine:menu_button", nil)
+}
+
+// GetInfo returns device information including product name, firmware versions, and hostname
+func (c *Client) GetInfo() (*Response, error) {
+	return c.Get("/v1/info", nil)
+}
+
 // Helper function to convert hex string to bytes
 func hexToBytes(hexStr string) ([]byte, error) {
 	// Remove "0x" prefix if present

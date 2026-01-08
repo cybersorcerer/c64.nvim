@@ -1,2 +1,4 @@
 .vscode
 .claude
+.luarc.json
+monitor.log

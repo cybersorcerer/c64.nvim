@@ -129,6 +129,9 @@ c64u version
 
 # C64 Ultimate API version
 c64u about
+
+# C64 Ultimate device information
+c64u info
 ```
 
 #### Configuration Management
@@ -174,6 +177,7 @@ c64u machine reboot                            # Reboot with cartridge reinit
 c64u machine pause                             # Pause via DMA
 c64u machine resume                            # Resume from pause
 c64u machine poweroff                          # Power off (U64 only)
+c64u machine menu-button                       # Simulate Menu button press
 
 # Memory operations
 c64u machine write-mem <addr> <data>           # Write hex data to memory

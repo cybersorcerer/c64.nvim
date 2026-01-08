@@ -92,53 +92,40 @@ function M.setup(config)
 
   -- C64 Ultimate integration (if enabled)
   if config.c64u and config.c64u.enabled then
-    -- Assemble and upload to C64 Ultimate
+    -- Assemble and upload to C64 Ultimate (Telescope)
     vim.keymap.set("n", "<leader>kuR", function()
-      require("c64.c64u").assemble_and_run(config)
-    end, { desc = "C64U: Assemble and run", silent = true })
+      require("telescope").extensions.c64u.assemble_and_upload()
+    end, { desc = "C64U: Assemble and upload", silent = true })
 
-    -- Upload current PRG to C64 Ultimate and run
-    vim.keymap.set("n", "<leader>kur", function()
-      local prg_file = vim.fn.expand("%:p:r") .. ".prg"
-      require("c64.c64u").upload_and_run(config, prg_file)
-    end, { desc = "C64U: Upload and run PRG", silent = true })
-
-    -- Upload current PRG without running
+    -- Upload PRG file picker (Telescope)
     vim.keymap.set("n", "<leader>kuu", function()
-      local prg_file = vim.fn.expand("%:p:r") .. ".prg"
-      require("c64.c64u").upload_only(config, prg_file)
-    end, { desc = "C64U: Upload PRG only", silent = true })
+      require("telescope").extensions.c64u.upload_prg()
+    end, { desc = "C64U: Upload PRG file", silent = true })
 
-    -- Reset C64 Ultimate
+    -- Drives manager (Telescope)
+    vim.keymap.set("n", "<leader>kud", function()
+      require("telescope").extensions.c64u.drives()
+    end, { desc = "C64U: Manage drives", silent = true })
+
+    -- Machine control (Telescope)
     vim.keymap.set("n", "<leader>kux", function()
-      require("c64.c64u").reset(config)
-    end, { desc = "C64U: Reset machine", silent = true })
+      require("telescope").extensions.c64u.machine()
+    end, { desc = "C64U: Machine control", silent = true })
 
     -- Get C64 Ultimate version
     vim.keymap.set("n", "<leader>kuv", function()
       require("c64.c64u").get_version(config)
     end, { desc = "C64U: Get API version", silent = true })
 
-    -- List drives
-    vim.keymap.set("n", "<leader>kul", function()
-      require("c64.c64u").list_drives(config)
-    end, { desc = "C64U: List drives", silent = true })
+    -- Create disk image
+    vim.keymap.set("n", "<leader>kuc", function()
+      require("c64.c64u").create_disk_image(config)
+    end, { desc = "C64U: Create disk image", silent = true })
 
-    -- Mount disk image
+    -- Create directory on partition
     vim.keymap.set("n", "<leader>kum", function()
-      local image = vim.fn.input("Disk image path: ", "", "file")
-      if image ~= "" then
-        local drive = vim.fn.input("Drive number (8-11): ", "8")
-        local mode = vim.fn.input("Mount mode (readonly/readwrite/unlinked): ", "readonly")
-        require("c64.c64u").mount_disk(config, drive, image, mode)
-      end
-    end, { desc = "C64U: Mount disk image", silent = true })
-
-    -- Unmount disk
-    vim.keymap.set("n", "<leader>kuU", function()
-      local drive = vim.fn.input("Drive number to unmount (8-11): ", "8")
-      require("c64.c64u").unmount_disk(config, drive)
-    end, { desc = "C64U: Unmount disk", silent = true })
+      require("c64.c64u").create_partition_directory(config)
+    end, { desc = "C64U: Create directory on partition", silent = true })
   end
 end
 
