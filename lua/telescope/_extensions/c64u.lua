@@ -64,22 +64,28 @@ local function list_directory(host, path, c64u_config)
 
   -- Convert to entries format
   local entries = {}
-  if data.entries then
-    for _, item in ipairs(data.entries) do
+  -- c64u returns array directly, not wrapped in "entries"
+  if data and type(data) == "table" then
+    for _, item in ipairs(data) do
+      -- c64u uses capitalized field names: Name, Type, IsDir, Size
+      local name = item.Name or item.name
+      local is_dir = item.IsDir or (item.Type == "dir") or (item.type == "dir")
+      local size = item.Size or item.size or 0
+
       -- Build path correctly, avoiding double slashes
       local clean_path
       if path == "/" then
-        clean_path = "/" .. item.name
+        clean_path = "/" .. name
       elseif path:sub(-1) == "/" then
-        clean_path = path .. item.name
+        clean_path = path .. name
       else
-        clean_path = path .. "/" .. item.name
+        clean_path = path .. "/" .. name
       end
 
       table.insert(entries, {
-        name = item.name,
-        is_dir = item.type == "dir",
-        size = item.size or 0,
+        name = name,
+        is_dir = is_dir,
+        size = size,
         path = clean_path,
       })
     end
@@ -225,7 +231,7 @@ M.drives = function(opts)
         map("i", "<C-c>", function()
           actions.close(prompt_bufnr)
 
-          vim.ui.select({ "d64 (35 tracks)", "d64 (40 tracks)", "d71", "d81", "dnp" }, {
+          vim.ui.select({ "d64 (35 tracks)", "d64 (40 tracks)", "d71", "d81", "g64", "dnp" }, {
             prompt = "Select disk image type:",
           }, function(choice)
             if not choice then
@@ -329,9 +335,19 @@ M.drives = function(opts)
           local entry = selection.value
 
           -- Check if it's a disk image file
-          if entry.is_dir or not entry.name:match("%.d%d%d$") then
-            vim.notify("Please select a disk image file (.d64, .d71, .d81)", vim.log.levels.WARN)
+          if entry.is_dir or not entry.name:match("%.d%d%d$") and not entry.name:match("%.g%d%d$") then
+            vim.notify("Please select a disk image file (.d64, .d71, .d81, .g64, .g71)", vim.log.levels.WARN)
             return
+          end
+
+          -- Extract image type from extension
+          -- g64 -> d64, g71 -> d71, otherwise use extension as-is
+          local ext = entry.name:match("%.([dg]%d%d)$")
+          local image_type = ext
+          if ext == "g64" then
+            image_type = "d64"
+          elseif ext == "g71" then
+            image_type = "d71"
           end
 
           -- Let user select drive name (a or b)
@@ -345,7 +361,7 @@ M.drives = function(opts)
               end
 
               local _, err = exec_c64u({
-                "drives", "mount", drive_name, entry.path, "--mode", mode
+                "drives", "mount", drive_name, entry.path, "--mode", mode, "--type", image_type
               }, c64_config.c64u)
 
               if err then

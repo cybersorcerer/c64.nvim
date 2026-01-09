@@ -147,7 +147,7 @@ end
 -- Create a new disk image
 function M.create_disk_image(config)
 	-- Select disk image type
-	vim.ui.select({ "d64 (35 tracks)", "d64 (40 tracks)", "d71 (70 tracks)", "d81 (160 tracks)", "dnp (custom tracks)" }, {
+	vim.ui.select({ "d64 (35 tracks)", "d64 (40 tracks)", "d71 (70 tracks)", "d81 (160 tracks)", "g64 (raw GCR)", "dnp (custom tracks)" }, {
 		prompt = "Select disk image type:",
 	}, function(choice)
 		if not choice then

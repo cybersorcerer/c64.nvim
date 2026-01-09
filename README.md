@@ -444,7 +444,7 @@ This design ensures c64.nvim works harmoniously with your existing Neovim config
 | `<leader>kud` | File Browser | FTP file browser for C64 Ultimate filesystem |
 | `<leader>kux` | Machine Control | Telescope picker for machine operations (reset/reboot/pause/resume/poweroff) |
 | `<leader>kuv` | Version | Show C64 Ultimate API version |
-| `<leader>kuc` | Create Disk Image | Create disk image (d64/d71/d81/dnp) |
+| `<leader>kuc` | Create Disk Image | Create disk image (d64/d71/d81/g64/dnp) |
 | `<leader>kum` | Create Directory | Create directory on C64U partition |
 
 **File Browser (`<leader>kud`):**
@@ -459,7 +459,7 @@ Navigation:
 
 Operations:
 
-- `Ctrl+c` - Create disk image (d64/d71/d81/dnp) in current directory
+- `Ctrl+c` - Create disk image (d64/d71/d81/g64/dnp) in current directory
 - `Ctrl+d` - Create new directory via FTP
 - `Ctrl+m` - Mount selected disk image (drive name extracted from path)
 - `Ctrl+u` - Unmount disk image from drive

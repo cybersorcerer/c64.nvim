@@ -257,7 +257,7 @@ C64 ULTIMATE~
                                                              *c64-<leader>kuv*
 <leader>kuv         Show C64 Ultimate API version
                                                              *c64-<leader>kuc*
-<leader>kuc         Create disk image (d64/d71/d81/dnp)
+<leader>kuc         Create disk image (d64/d71/d81/g64/dnp)
                                                              *c64-<leader>kum*
 <leader>kum         Create directory on C64U partition
 
