@@ -45,94 +45,44 @@ local function exec_c64u(args, opts)
   return output, nil
 end
 
--- Check if FTP client is available
-local function check_ftp_client()
-  local ftp_clients = { "ftp", "ftp.exe" }
-  for _, client in ipairs(ftp_clients) do
-    if vim.fn.executable(client) == 1 then
-      return true, client
-    end
-  end
-  return false, nil
-end
+-- List directory contents using c64u fs ls
+local function list_directory(host, path, c64u_config)
+  -- Use c64u fs ls command with JSON output
+  local output, err = exec_c64u({"fs", "ls", path}, vim.tbl_extend("force", c64u_config or {}, {json = true, host = host}))
 
--- List FTP directory contents
-local function list_ftp_directory(host, port, path)
+  if err then
+    vim.notify(string.format("Failed to list directory %s: %s", path, err), vim.log.levels.ERROR)
+    return {}
+  end
+
+  -- Parse JSON output
+  local ok, data = pcall(vim.json.decode, output)
+  if not ok or not data then
+    vim.notify("Failed to parse directory listing", vim.log.levels.ERROR)
+    return {}
+  end
+
+  -- Convert to entries format
   local entries = {}
-
-  -- Create FTP script for listing
-  local script_file = vim.fn.tempname()
-
-  -- Use dir instead of ls for better compatibility
-  -- Quote the path to handle spaces and special characters
-  local ftp_commands = string.format([[open %s %s
-user anonymous anonymous@
-cd "%s"
-dir
-bye
-]], host, port or 21, path)
-
-  vim.fn.writefile(vim.split(ftp_commands, "\n"), script_file)
-
-  -- Execute FTP command and capture output directly
-  local cmd = string.format("ftp -n < %s 2>&1", vim.fn.shellescape(script_file))
-  local output = vim.fn.system(cmd)
-
-  -- Debug: Check for FTP errors
-  if output:match("Failed to change directory") or output:match("No such file or directory") then
-    vim.notify(string.format("FTP cd failed for path: %s\nOutput: %s", path, output), vim.log.levels.ERROR)
-  end
-
-  -- Parse output line by line
-  local lines = vim.split(output, "\n")
-  for _, line in ipairs(lines) do
-    -- Try multiple parsing patterns
-
-    -- Pattern 1: Unix-style listing (drwxr-xr-x)
-    local perms, size, name = line:match("^([drwx%-]+)%s+%d+%s+%S+%s+%S+%s+(%d+)%s+%S+%s+%d+%s+[%d:]+%s+(.+)$")
-
-    if not name then
-      -- Pattern 2: Windows-style listing (01-08-26  12:00PM)
-      local _, _, size_or_dir, name2 = line:match("^(%d+%-%d+%-%d+)%s+(%d+:%d+[AP]M)%s+(%S+)%s+(.+)$")
-      if name2 then
-        name = name2
-        if size_or_dir == "<DIR>" then
-          perms = "d"
-          size = "0"
-        else
-          perms = "-"
-          size = size_or_dir
-        end
-      end
-    end
-
-    if name and name ~= "." and name ~= ".." then
-      local is_dir = perms and perms:sub(1,1) == "d"
+  if data.entries then
+    for _, item in ipairs(data.entries) do
       -- Build path correctly, avoiding double slashes
       local clean_path
       if path == "/" then
-        clean_path = "/" .. name
+        clean_path = "/" .. item.name
       elseif path:sub(-1) == "/" then
-        clean_path = path .. name
+        clean_path = path .. item.name
       else
-        clean_path = path .. "/" .. name
+        clean_path = path .. "/" .. item.name
       end
 
       table.insert(entries, {
-        name = name,
-        is_dir = is_dir,
-        size = tonumber(size) or 0,
+        name = item.name,
+        is_dir = item.type == "dir",
+        size = item.size or 0,
         path = clean_path,
       })
     end
-  end
-
-  -- Cleanup
-  vim.fn.delete(script_file)
-
-  -- Debug info if no entries found
-  if #entries == 0 then
-    vim.notify("No FTP entries found. Raw output:\n" .. output, vim.log.levels.WARN)
   end
 
   return entries
@@ -173,19 +123,18 @@ M.drives = function(opts)
     return
   end
 
-  -- Check if FTP client is available
-  local has_ftp = check_ftp_client()
-  if not has_ftp then
+  -- Check if c64u CLI is available
+  if vim.fn.executable("c64u") ~= 1 then
     vim.notify(
-      "FTP client not found in PATH. Please install an FTP client (ftp or ftp.exe) to use this feature.",
+      "c64u CLI not found in PATH. Please install c64u to use this feature.\n" ..
+      "See: https://github.com/cybersorcerer/c64.nvim/tree/main/tools/c64u",
       vim.log.levels.ERROR
     )
     return
   end
 
-  -- Get host from config - FTP port is always 21
+  -- Get host from config
   local host = c64_config.c64u.host
-  local ftp_port = 21
 
   if not host or host == "" then
     vim.notify(
@@ -214,7 +163,7 @@ M.drives = function(opts)
       return
     end
 
-    local entries = list_ftp_directory(host, ftp_port, path)
+    local entries = list_directory(host, path, c64_config.c64u)
 
     -- Add parent directory entry if not at root
     if path ~= "/" then
@@ -353,28 +302,19 @@ M.drives = function(opts)
               return
             end
 
-            -- Create directory via FTP
-            local script_file = vim.fn.tempname()
-            local ftp_commands = string.format([[
-open %s %s
-user anonymous anonymous@
-cd %s
-mkdir %s
-bye
-]], host, ftp_port, current_path, dirname)
+            -- Create directory path
+            local dir_path = current_path == "/" and "/" .. dirname or current_path .. "/" .. dirname
 
-            vim.fn.writefile(vim.split(ftp_commands, "\n"), script_file)
-            local cmd = string.format("ftp -n < %s 2>&1", vim.fn.shellescape(script_file))
-            local output = vim.fn.system(cmd)
-            vim.fn.delete(script_file)
+            -- Create directory via c64u fs mkdir
+            local _, err = exec_c64u({"fs", "mkdir", dir_path}, c64_config.c64u)
 
-            if vim.v.shell_error == 0 then
-              vim.notify(string.format("Created directory: %s/%s", current_path, dirname), vim.log.levels.INFO)
+            if err then
+              vim.notify("Failed to create directory: " .. err, vim.log.levels.ERROR)
+            else
+              vim.notify(string.format("Created directory: %s", dir_path), vim.log.levels.INFO)
               -- Refresh browser
               actions.close(prompt_bufnr)
               show_browser(current_path)
-            else
-              vim.notify("Failed to create directory: " .. output, vim.log.levels.ERROR)
             end
           end)
         end)

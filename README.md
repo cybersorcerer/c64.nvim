@@ -115,7 +115,9 @@ Before installing c64.nvim, ensure you have the following:
 
 - **c64u CLI** - For C64 Ultimate hardware integration ([See tools/c64u](tools/c64u/README.md))
   - Enables direct upload to C64 Ultimate hardware
+  - Complete filesystem access (browse, upload, download, manage files)
   - Drive management and machine control from Neovim
+  - Command-line tools for quick file operations
   - See [Installing c64u CLI](#installing-c64u-cli) below for installation options
 
 ## Installation
@@ -445,9 +447,9 @@ This design ensures c64.nvim works harmoniously with your existing Neovim config
 | `<leader>kuc` | Create Disk Image | Create disk image (d64/d71/d81/dnp) |
 | `<leader>kum` | Create Directory | Create directory on C64U partition |
 
-**FTP File Browser (`<leader>kud`):**
+**File Browser (`<leader>kud`):**
 
-**Prerequisites:** Requires an FTP client (`ftp` or `ftp.exe`) in your PATH.
+**Prerequisites:** Requires `c64u` CLI to be installed in your PATH.
 
 Navigation:
 
@@ -489,6 +491,8 @@ These are automatically set when editing Kick Assembler files:
 
 The plugin provides the following user commands:
 
+### General Commands
+
 | Command | Description |
 |---------|-------------|
 | `:C64Assemble` | Assemble the current file with Kick Assembler |
@@ -496,6 +500,26 @@ The plugin provides the following user commands:
 | `:C64Debug` | Run the program in VICE with debug mode enabled |
 | `:C64Enable` | Manually enable c64.nvim for current buffer |
 | `:C64CreateMarker` | Create `.kickass` marker file in current directory |
+
+### C64 Ultimate Filesystem Commands
+
+**Note:** These commands require `c64u` CLI to be installed and C64 Ultimate integration enabled in your config (`c64u.enabled = true`).
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `:C64ULs [path]` | List directory contents (default: /) | `:C64ULs /SD` |
+| `:C64UUpload <local> [remote]` | Upload file to C64U (default remote: /Temp/) | `:C64UUpload % /Temp/` |
+| `:C64UDownload <remote> [local]` | Download file from C64U | `:C64UDownload /SD/game.prg ./` |
+| `:C64UMkdir <path>` | Create directory on C64U | `:C64UMkdir /Temp/myproject` |
+| `:C64URm <path>` | Remove file/directory (with confirmation) | `:C64URm /Temp/old.prg` |
+| `:C64UMv <source> <dest>` | Move/rename file on C64U | `:C64UMv /Temp/a.prg /Temp/b.prg` |
+| `:C64UCp <source> <dest>` | Copy file on C64U | `:C64UCp /SD/game.prg /Temp/game.prg` |
+| `:C64UCat <path>` | Show file information | `:C64UCat /Temp/program.prg` |
+
+**Quick Tips:**
+- Use `%` to reference current file: `:C64UUpload %`
+- Paths are autocompleted for local files in upload command
+- Download uses current directory if no local path specified
 
 ## Telescope Extension
 

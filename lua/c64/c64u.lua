@@ -212,4 +212,162 @@ function M.create_disk_image(config)
 	end)
 end
 
+-- Filesystem operations using c64u fs commands
+
+-- List directory contents
+function M.fs_list(path, config)
+	path = path or "/"
+	local output = exec_c64u({ "fs", "ls", path }, config.c64u or {})
+
+	if output then
+		vim.notify(output, vim.log.levels.INFO)
+	end
+end
+
+-- Upload file to C64 Ultimate
+function M.fs_upload(local_file, remote_path, config)
+	if not local_file or local_file == "" then
+		vim.notify("No local file specified", vim.log.levels.ERROR)
+		return
+	end
+
+	-- Expand file path
+	local_file = vim.fn.expand(local_file)
+
+	if vim.fn.filereadable(local_file) ~= 1 then
+		vim.notify(string.format("File not found: %s", local_file), vim.log.levels.ERROR)
+		return
+	end
+
+	-- If no remote path specified, upload to /Temp with same filename
+	if not remote_path or remote_path == "" then
+		local filename = vim.fn.fnamemodify(local_file, ":t")
+		remote_path = "/Temp/" .. filename
+	end
+
+	vim.notify(string.format("Uploading %s to %s...", vim.fn.fnamemodify(local_file, ":t"), remote_path), vim.log.levels.INFO)
+
+	local output = exec_c64u({ "fs", "upload", local_file, remote_path }, config.c64u or {})
+
+	if output then
+		vim.notify(string.format("Uploaded: %s", remote_path), vim.log.levels.INFO)
+	end
+end
+
+-- Download file from C64 Ultimate
+function M.fs_download(remote_path, local_file, config)
+	if not remote_path or remote_path == "" then
+		vim.notify("No remote path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	-- If no local file specified, download to current directory
+	if not local_file or local_file == "" then
+		local filename = vim.fn.fnamemodify(remote_path, ":t")
+		local_file = "./" .. filename
+	end
+
+	-- Expand path
+	local_file = vim.fn.expand(local_file)
+
+	vim.notify(string.format("Downloading %s to %s...", remote_path, local_file), vim.log.levels.INFO)
+
+	local output = exec_c64u({ "fs", "download", remote_path, local_file }, config.c64u or {})
+
+	if output then
+		vim.notify(string.format("Downloaded: %s", local_file), vim.log.levels.INFO)
+	end
+end
+
+-- Create directory on C64 Ultimate
+function M.fs_mkdir(path, config)
+	if not path or path == "" then
+		vim.notify("No directory path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	local output = exec_c64u({ "fs", "mkdir", path }, config.c64u or {})
+
+	if output then
+		vim.notify(string.format("Created directory: %s", path), vim.log.levels.INFO)
+	end
+end
+
+-- Remove file or directory on C64 Ultimate
+function M.fs_remove(path, config)
+	if not path or path == "" then
+		vim.notify("No path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	-- Confirm deletion
+	vim.ui.input({
+		prompt = string.format("Delete '%s'? (yes/no): ", path),
+	}, function(input)
+		if input and input:lower() == "yes" then
+			local output = exec_c64u({ "fs", "rm", path }, config.c64u or {})
+
+			if output then
+				vim.notify(string.format("Removed: %s", path), vim.log.levels.INFO)
+			end
+		else
+			vim.notify("Deletion cancelled", vim.log.levels.INFO)
+		end
+	end)
+end
+
+-- Move/rename file on C64 Ultimate
+function M.fs_move(source, dest, config)
+	if not source or source == "" then
+		vim.notify("No source path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	if not dest or dest == "" then
+		vim.notify("No destination path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	local output = exec_c64u({ "fs", "mv", source, dest }, config.c64u or {})
+
+	if output then
+		vim.notify(string.format("Moved: %s -> %s", source, dest), vim.log.levels.INFO)
+	end
+end
+
+-- Copy file on C64 Ultimate
+function M.fs_copy(source, dest, config)
+	if not source or source == "" then
+		vim.notify("No source path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	if not dest or dest == "" then
+		vim.notify("No destination path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	vim.notify(string.format("Copying %s to %s...", source, dest), vim.log.levels.INFO)
+
+	local output = exec_c64u({ "fs", "cp", source, dest }, config.c64u or {})
+
+	if output then
+		vim.notify(string.format("Copied: %s -> %s", source, dest), vim.log.levels.INFO)
+	end
+end
+
+-- Show file information
+function M.fs_cat(path, config)
+	if not path or path == "" then
+		vim.notify("No path specified", vim.log.levels.ERROR)
+		return
+	end
+
+	local output = exec_c64u({ "fs", "cat", path }, config.c64u or {})
+
+	if output then
+		vim.notify(output, vim.log.levels.INFO)
+	end
+end
+
 return M

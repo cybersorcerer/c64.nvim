@@ -1,0 +1,417 @@
+*c64.txt*  Neovim plugin for C64 Assembler development
+
+==============================================================================
+CONTENTS                                                       *c64* *c64.nvim*
+
+    1. Introduction ............................ |c64-introduction|
+    2. Requirements ............................ |c64-requirements|
+    3. Installation ............................ |c64-installation|
+    4. Configuration ........................... |c64-configuration|
+    5. Features ................................ |c64-features|
+    6. Commands ................................ |c64-commands|
+    7. Keymaps ................................. |c64-keymaps|
+    8. C64 Ultimate Integration ................ |c64-ultimate|
+    9. LSP Settings ............................ |c64-lsp|
+   10. Troubleshooting ......................... |c64-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                                          *c64-introduction*
+
+c64.nvim is a comprehensive Neovim plugin for C64 Assembler development
+using Kick Assembler. It provides LSP support, VICE emulator integration,
+and optional C64 Ultimate hardware integration.
+
+Features:
+  • Full Language Server Protocol support via kickass_ls
+  • Direct Kick Assembler compilation from Neovim
+  • VICE emulator integration with debug support
+  • C64 Ultimate hardware integration
+  • Telescope integration for references and diagnostics
+
+==============================================================================
+2. REQUIREMENTS                                          *c64-requirements*
+
+Required:
+  • Neovim 0.11+
+  • Java Runtime (for Kick Assembler)
+  • Kick Assembler (kickass.jar)
+  • VICE Emulator (x64 binary in PATH)
+  • kickass_ls Language Server (in PATH)
+
+Optional:
+  • telescope.nvim (for enhanced UI)
+  • nvim-cmp (for enhanced completion)
+  • c64u CLI (for C64 Ultimate integration)
+
+==============================================================================
+3. INSTALLATION                                          *c64-installation*
+
+Using lazy.nvim: >lua
+    return {
+      "cybersorcerer/c64.nvim",
+      dependencies = {
+        "nvim-telescope/telescope.nvim",
+        "hrsh7th/nvim-cmp",
+      },
+      ft = { "kickass" },
+      config = function()
+        require("c64").setup({
+          kickass_jar_path = vim.fn.expand("~/tools/kickass.jar"),
+        })
+      end,
+    }
+<
+
+==============================================================================
+4. CONFIGURATION                                        *c64-configuration*
+
+Default configuration: >lua
+    require("c64").setup({
+      -- Path to kickass.jar file
+      kickass_jar_path = vim.fn.expand("~/tools/kickass.jar"),
+
+      -- VICE emulator binary (must be in PATH)
+      vice_binary = "x64",
+
+      -- Language server binary (must be in PATH)
+      kickass_ls_binary = "kickass_ls",
+
+      -- LSP configuration
+      lsp = {
+        settings = {
+          kickass_ls = {
+            warnUnusedLabels = false,
+            zeroPageOptimization = { enabled = true },
+            -- ... (see |c64-lsp| for full settings)
+          }
+        }
+      },
+
+      -- C64 Ultimate integration (optional)
+      c64u = {
+        enabled = false,
+        host = nil,  -- C64U hostname/IP
+        port = nil,  -- HTTP port (default: 80)
+      },
+    })
+<
+
+==============================================================================
+5. FEATURES                                                  *c64-features*
+
+LSP INTEGRATION~
+  • Semantic token highlighting
+  • Real-time diagnostics
+  • Code completion
+  • Symbol navigation
+  • C64-specific analysis (zero-page optimization, hardware bug detection)
+
+BUILD INTEGRATION~
+  • Direct Kick Assembler compilation
+  • Automatic error parsing
+  • Quickfix list integration
+
+VICE EMULATOR~
+  • One-keypress execution
+  • Debug mode with VICE monitor
+  • Remote monitor integration
+  • Symbol file support
+
+C64 ULTIMATE~
+  • Direct upload to hardware
+  • Filesystem access (browse, upload, download)
+  • Drive management
+  • Machine control
+
+==============================================================================
+6. COMMANDS                                                  *c64-commands*
+
+GENERAL COMMANDS~
+
+:C64Assemble                                                  *:C64Assemble*
+    Assemble the current file with Kick Assembler.
+    Errors are parsed and loaded into the quickfix list.
+
+:C64Run                                                            *:C64Run*
+    Run the current program in VICE emulator.
+    Requires the PRG file to exist (assemble first).
+
+:C64Debug                                                        *:C64Debug*
+    Run the program in VICE with debug mode enabled.
+    Launches VICE with remote monitor and symbol file support.
+
+:C64Enable                                                      *:C64Enable*
+    Manually enable c64.nvim for current buffer.
+    Sets filetype to 'kickass' and activates all features.
+
+:C64CreateMarker                                          *:C64CreateMarker*
+    Create `.kickass` marker file in current directory.
+    All .asm files in this directory will be treated as Kick Assembler.
+
+C64 ULTIMATE FILESYSTEM COMMANDS~
+                                                          *c64-ultimate-commands*
+Note: These commands require c64u CLI to be installed and C64 Ultimate
+integration enabled in config (c64u.enabled = true).
+
+:C64ULs [path]                                                    *:C64ULs*
+    List directory contents on C64 Ultimate.
+    Default path: /
+    Example: >
+        :C64ULs /SD
+<
+
+:C64UUpload {local} [remote]                                  *:C64UUpload*
+    Upload file to C64 Ultimate.
+    If no remote path specified, uploads to /Temp/ with same filename.
+    Use % to reference current file.
+    Examples: >
+        :C64UUpload % /Temp/
+        :C64UUpload myfile.prg /SD/programs/myfile.prg
+<
+
+:C64UDownload {remote} [local]                              *:C64UDownload*
+    Download file from C64 Ultimate.
+    If no local path specified, downloads to current directory.
+    Examples: >
+        :C64UDownload /SD/game.prg ./
+        :C64UDownload /Temp/test.prg
+<
+
+:C64UMkdir {path}                                              *:C64UMkdir*
+    Create directory on C64 Ultimate.
+    Example: >
+        :C64UMkdir /Temp/myproject
+<
+
+:C64URm {path}                                                    *:C64URm*
+    Remove file or directory on C64 Ultimate.
+    Prompts for confirmation before deletion.
+    Example: >
+        :C64URm /Temp/old.prg
+<
+
+:C64UMv {source} {dest}                                           *:C64UMv*
+    Move or rename file on C64 Ultimate.
+    Example: >
+        :C64UMv /Temp/old.prg /Temp/new.prg
+<
+
+:C64UCp {source} {dest}                                           *:C64UCp*
+    Copy file on C64 Ultimate.
+    Example: >
+        :C64UCp /SD/game.prg /Temp/game.prg
+<
+
+:C64UCat {path}                                                  *:C64UCat*
+    Show file information on C64 Ultimate.
+    Example: >
+        :C64UCat /Temp/program.prg
+<
+
+==============================================================================
+7. KEYMAPS                                                      *c64-keymaps*
+
+BUILD & RUN~
+                                                              *c64-<leader>ka*
+<leader>ka          Assemble current file with Kick Assembler
+                                                              *c64-<leader>kr*
+<leader>kr          Run current program in VICE emulator
+                                                              *c64-<leader>kd*
+<leader>kd          Debug program in VICE with monitor
+
+DIAGNOSTICS~
+                                                               *c64-<leader>d*
+<leader>d           Show line diagnostics in floating window
+                                                              *c64-<leader>dv*
+<leader>dv          Enable virtual text mode (inline diagnostics)
+                                                              *c64-<leader>dl*
+<leader>dl          Enable virtual lines mode (separate diagnostic lines)
+                                                              *c64-<leader>ds*
+<leader>ds          Enable signs only mode (minimal clutter)
+                                                              *c64-<leader>dt*
+<leader>dt          Toggle diagnostic display modes
+
+C64 REFERENCE~
+                                                              *c64-<leader>cr*
+<leader>cr          Search C64 Programmer's Reference Manual
+                                                              *c64-<leader>cm*
+<leader>cm          Browse C64 memory map
+                                                              *c64-<leader>cR*
+<leader>cR          Browse C64 registers and constants
+                                                              *c64-<leader>dd*
+<leader>dd          Show buffer diagnostics (Telescope)
+                                                              *c64-<leader>dw*
+<leader>dw          Show workspace diagnostics (Telescope)
+                                                              *c64-<leader>cs*
+<leader>cs          Show document symbols (Telescope)
+
+C64 ULTIMATE~
+                                                             *c64-<leader>kuR*
+<leader>kuR         Assemble and upload to C64 Ultimate, then run
+                                                             *c64-<leader>kuu*
+<leader>kuu         Upload PRG file (Telescope picker)
+                                                             *c64-<leader>kud*
+<leader>kud         File browser for C64 Ultimate filesystem
+                                                             *c64-<leader>kux*
+<leader>kux         Machine control (reset/reboot/pause/resume)
+                                                             *c64-<leader>kuv*
+<leader>kuv         Show C64 Ultimate API version
+                                                             *c64-<leader>kuc*
+<leader>kuc         Create disk image (d64/d71/d81/dnp)
+                                                             *c64-<leader>kum*
+<leader>kum         Create directory on C64U partition
+
+LSP KEYMAPS~
+These are automatically set when editing Kick Assembler files:
+
+gD                  Go to declaration
+gd                  Go to definition
+K                   Show hover documentation
+gi                  Go to implementation
+<C-k>               Show signature help
+gr                  Show references
+<space>rn           Rename symbol
+<space>ca           Show code actions
+<space>f            Format document
+
+==============================================================================
+8. C64 ULTIMATE INTEGRATION                                  *c64-ultimate*
+
+C64 Ultimate integration requires the c64u CLI tool to be installed.
+
+INSTALLATION~
+
+Download from GitHub releases:
+https://github.com/cybersorcerer/c64.nvim/releases
+
+Or build from source: >bash
+    cd tools/c64u
+    make install
+<
+
+CONFIGURATION~
+
+Create config file at ~/.config/c64u/config.toml: >toml
+    host = "c64u.local"
+    port = 80
+<
+
+Enable in c64.nvim: >lua
+    require("c64").setup({
+      c64u = {
+        enabled = true,
+        host = "c64u.local",
+        port = 80,
+      },
+    })
+<
+
+FILE BROWSER~
+                                                        *c64-ultimate-browser*
+Press <leader>kud to open the file browser.
+
+Navigation:
+  • Enter on directory - Navigate into directory
+  • Enter on file - Show file information
+  • .. entry - Navigate to parent directory
+
+Operations (in insert mode):
+  • Ctrl-c - Create disk image
+  • Ctrl-d - Create directory
+  • Ctrl-y - Mount disk image
+  • Ctrl-u - Unmount disk image
+
+==============================================================================
+9. LSP SETTINGS                                                    *c64-lsp*
+
+The kickass_ls Language Server provides C64-specific analysis.
+
+AVAILABLE SETTINGS~
+
+warnUnusedLabels                                    *c64-lsp-warnUnusedLabels*
+    Type: boolean
+    Default: false
+    Warn about labels that are defined but never used.
+
+zeroPageOptimization                            *c64-lsp-zeroPageOptimization*
+    Type: { enabled: boolean, showHints: boolean }
+    Default: { enabled = true, showHints = true }
+    Detect variables that could use zero-page addressing.
+
+branchDistanceValidation                    *c64-lsp-branchDistanceValidation*
+    Type: { enabled: boolean, showWarnings: boolean }
+    Default: { enabled = true, showWarnings = true }
+    Validate branch instruction distances (max ±127 bytes).
+
+illegalOpcodeDetection                        *c64-lsp-illegalOpcodeDetection*
+    Type: { enabled: boolean, showWarnings: boolean }
+    Default: { enabled = true, showWarnings = true }
+    Detect illegal/undocumented opcodes.
+
+hardwareBugDetection                            *c64-lsp-hardwareBugDetection*
+    Type: { enabled: boolean, showWarnings: boolean, jmpIndirectBug: boolean }
+    Default: { enabled = true, showWarnings = true, jmpIndirectBug = true }
+    Detect known C64 hardware bugs (e.g., JMP indirect page boundary bug).
+
+memoryLayoutAnalysis                            *c64-lsp-memoryLayoutAnalysis*
+    Type: { enabled: boolean, showIOAccess: boolean, ... }
+    Default: { enabled = true, ... }
+    Analyze memory access patterns and warn about I/O access, stack issues.
+
+magicNumberDetection                            *c64-lsp-magicNumberDetection*
+    Type: { enabled: boolean, showHints: boolean, c64Addresses: boolean }
+    Default: { enabled = true, showHints = true, c64Addresses = true }
+    Suggest named constants for common C64 addresses.
+
+deadCodeDetection                                  *c64-lsp-deadCodeDetection*
+    Type: { enabled: boolean, showWarnings: boolean }
+    Default: { enabled = true, showWarnings = true }
+    Detect unreachable code.
+
+styleGuideEnforcement                          *c64-lsp-styleGuideEnforcement*
+    Type: { enabled: boolean, showHints: boolean, ... }
+    Default: { enabled = true, ... }
+    Enforce coding style guidelines (e.g., uppercase constants).
+
+==============================================================================
+10. TROUBLESHOOTING                                  *c64-troubleshooting*
+
+LSP NOT STARTING~
+
+Check if kickass_ls is in your PATH: >bash
+    which kickass_ls
+<
+Check Neovim's LSP logs: >vim
+    :LspLog
+<
+
+ASSEMBLY FAILS~
+
+Verify kickass_jar_path is correct.
+Check Java is installed: >bash
+    java -version
+<
+Check error in quickfix list: >vim
+    :copen
+<
+
+VICE NOT LAUNCHING~
+
+Ensure x64 is in your PATH: >bash
+    which x64
+<
+Make sure you assembled the file first (<leader>ka).
+Check that a .prg file was created.
+
+C64 ULTIMATE CONNECTION~
+
+Test if C64U is reachable: >bash
+    ping c64u.local
+    curl http://c64u.local/v1/version
+<
+Check c64u configuration: >bash
+    c64u config show
+<
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

@@ -101,6 +101,92 @@ function M.setup(opts)
 
   -- Setup diagnostics
   require("c64.diagnostics").setup()
+
+  -- Setup C64 Ultimate filesystem commands (if enabled)
+  if M.config.c64u and M.config.c64u.enabled then
+    local c64u = require("c64.c64u")
+
+    -- C64ULs - List directory contents
+    vim.api.nvim_create_user_command("C64ULs", function(args)
+      c64u.fs_list(args.args ~= "" and args.args or "/", M.config)
+    end, {
+      nargs = "?",
+      desc = "List C64 Ultimate directory contents (default: /)"
+    })
+
+    -- C64UUpload - Upload file to C64 Ultimate
+    vim.api.nvim_create_user_command("C64UUpload", function(args)
+      local parts = vim.split(args.args, "%s+")
+      local local_file = parts[1]
+      local remote_path = parts[2]
+      c64u.fs_upload(local_file, remote_path, M.config)
+    end, {
+      nargs = "+",
+      complete = "file",
+      desc = "Upload file to C64 Ultimate: C64UUpload <local_file> [remote_path]"
+    })
+
+    -- C64UDownload - Download file from C64 Ultimate
+    vim.api.nvim_create_user_command("C64UDownload", function(args)
+      local parts = vim.split(args.args, "%s+")
+      local remote_path = parts[1]
+      local local_file = parts[2]
+      c64u.fs_download(remote_path, local_file, M.config)
+    end, {
+      nargs = "+",
+      desc = "Download file from C64 Ultimate: C64UDownload <remote_path> [local_file]"
+    })
+
+    -- C64UMkdir - Create directory on C64 Ultimate
+    vim.api.nvim_create_user_command("C64UMkdir", function(args)
+      c64u.fs_mkdir(args.args, M.config)
+    end, {
+      nargs = 1,
+      desc = "Create directory on C64 Ultimate: C64UMkdir <path>"
+    })
+
+    -- C64URm - Remove file or directory on C64 Ultimate
+    vim.api.nvim_create_user_command("C64URm", function(args)
+      c64u.fs_remove(args.args, M.config)
+    end, {
+      nargs = 1,
+      desc = "Remove file/directory on C64 Ultimate (confirms): C64URm <path>"
+    })
+
+    -- C64UMv - Move/rename file on C64 Ultimate
+    vim.api.nvim_create_user_command("C64UMv", function(args)
+      local parts = vim.split(args.args, "%s+")
+      if #parts < 2 then
+        vim.notify("Usage: C64UMv <source> <dest>", vim.log.levels.ERROR)
+        return
+      end
+      c64u.fs_move(parts[1], parts[2], M.config)
+    end, {
+      nargs = "+",
+      desc = "Move/rename on C64 Ultimate: C64UMv <source> <dest>"
+    })
+
+    -- C64UCp - Copy file on C64 Ultimate
+    vim.api.nvim_create_user_command("C64UCp", function(args)
+      local parts = vim.split(args.args, "%s+")
+      if #parts < 2 then
+        vim.notify("Usage: C64UCp <source> <dest>", vim.log.levels.ERROR)
+        return
+      end
+      c64u.fs_copy(parts[1], parts[2], M.config)
+    end, {
+      nargs = "+",
+      desc = "Copy file on C64 Ultimate: C64UCp <source> <dest>"
+    })
+
+    -- C64UCat - Show file information
+    vim.api.nvim_create_user_command("C64UCat", function(args)
+      c64u.fs_cat(args.args, M.config)
+    end, {
+      nargs = 1,
+      desc = "Show file info on C64 Ultimate: C64UCat <path>"
+    })
+  end
 end
 
 return M
