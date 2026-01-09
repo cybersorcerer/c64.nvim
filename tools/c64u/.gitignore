@@ -32,3 +32,4 @@ Thumbs.db
 # Build artifacts
 build/
 bin/
+dist/

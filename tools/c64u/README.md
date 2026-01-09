@@ -231,6 +231,47 @@ c64u files create-d81 <path> [--name NAME]
 c64u files create-dnp <path> --tracks N [--name NAME]
 ```
 
+#### Filesystem Operations (via FTP)
+
+Complete filesystem access to C64 Ultimate via FTP (port 21, anonymous login):
+
+```bash
+# Directory listing
+c64u fs ls [path]                              # List files and directories
+
+# File transfer
+c64u fs upload <local> <remote>                # Upload file to C64U
+c64u fs download <remote> <local>              # Download file from C64U
+
+# Directory operations
+c64u fs mkdir <path>                           # Create directory
+c64u fs rm <path>                              # Remove file or directory
+
+# File operations
+c64u fs mv <source> <dest>                     # Move/rename file or directory
+c64u fs cp <source> <dest>                     # Copy file (download+upload)
+c64u fs cat <path>                             # Show file information
+```
+
+**Examples:**
+
+```bash
+# List root directory
+c64u fs ls /
+
+# Upload PRG file
+c64u fs upload myprogram.prg /Temp/myprogram.prg
+
+# Download from SD card
+c64u fs download /SD/games/game.prg ./game.prg
+
+# Create directory
+c64u fs mkdir /Temp/myproject
+
+# Move file
+c64u fs mv /Temp/old.prg /Temp/new.prg
+```
+
 ## Output Formats
 
 ### Text Mode (Default)

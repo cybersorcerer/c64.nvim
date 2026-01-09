@@ -34,9 +34,10 @@ A Neovim plugin for C64 Assembler development using Kick Assembler, featuring LS
   - Signs only mode (minimal clutter)
   - Easy toggle between modes
 
-- **C64 Ultimate Integration**: Direct hardware deployment (NEW!)
+- **C64 Ultimate Integration**: Direct hardware deployment
   - Upload and run programs on real C64 Ultimate hardware
   - One-command workflow: assemble → upload → run
+  - Complete filesystem access via FTP (browse, upload, download, manage files)
   - Drive management (mount/unmount disk images)
   - Machine control (reset, memory operations)
   - Works with both Ultimate64 and Ultimate-II+ hardware
