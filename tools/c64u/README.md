@@ -58,7 +58,7 @@ make release
 ### 1. Create Configuration File
 
 ```bash
-c64u config init
+c64u cli-config init
 ```
 
 This creates `~/.config/c64u/config.toml` with default settings.
@@ -81,8 +81,8 @@ port = 80
 # Get API version
 c64u about
 
-# Show current configuration
-c64u config show
+# Show current CLI configuration
+c64u cli-config show
 ```
 
 ## Configuration
@@ -134,14 +134,16 @@ c64u about
 c64u info
 ```
 
-#### Configuration Management
+#### CLI Configuration Management
+
+Manage c64u CLI tool configuration file (`~/.config/c64u/config.toml`):
 
 ```bash
-# Create default config file
-c64u config init
+# Create default CLI config file
+c64u cli-config init
 
-# Show current configuration
-c64u config show
+# Show current CLI configuration
+c64u cli-config show
 ```
 
 #### Runners - Media & Program Execution
@@ -453,8 +455,8 @@ c64u --verbose --host 192.168.1.100 api-version
 ### Configuration Issues
 
 ```bash
-# Check current configuration
-c64u config show
+# Check current CLI configuration
+c64u cli-config show
 
 # Verify config file location
 ls -la ~/.config/c64u/config.toml
