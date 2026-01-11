@@ -253,6 +253,52 @@ c64u fs cp <source> <dest>                     # Copy file (download+upload)
 c64u fs cat <path>                             # Show file information
 ```
 
+#### Configuration Management
+
+Manage C64 Ultimate configuration settings:
+
+```bash
+# List all categories
+c64u config list
+
+# Show all settings in a category
+c64u config show "Drive A Settings"
+c64u config show "drive a*"              # Wildcards supported
+
+# Get detailed info about a setting
+c64u config get "Drive A Settings" "Drive Type"
+c64u config get "drive a*" "*bus*"       # Wildcards supported
+
+# Set a configuration item
+c64u config set "Drive A Settings" "Drive Type" "1581"
+c64u config set "drive a*" "*bus*" "9"
+
+# Set multiple settings from JSON file
+c64u config set-multiple settings.json
+
+# Persistence
+c64u config save-to-flash                # Save to non-volatile memory
+c64u config load-from-flash              # Load from flash (discards unsaved changes)
+c64u config reset-to-default             # Reset to factory defaults
+
+# Export/Import
+c64u config export config-backup.json    # Export all settings to JSON
+c64u config export                       # Print to stdout
+```
+
+**JSON format for set-multiple:**
+```json
+{
+  "Drive A Settings": {
+    "Drive": "Enabled",
+    "Drive Type": "1581"
+  },
+  "Drive B Settings": {
+    "Drive": "Disabled"
+  }
+}
+```
+
 **Examples:**
 
 ```bash
