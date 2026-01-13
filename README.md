@@ -113,7 +113,7 @@ Before installing c64.nvim, ensure you have the following:
   - When not installed, c64.nvim uses Neovim's native completion system
   - No additional configuration needed - auto-detection handles everything
 
-- **c64u CLI** - For C64 Ultimate hardware integration ([See tools/c64u](tools/c64u/README.md))
+- **c64u CLI** - For C64 Ultimate hardware integration ([c64u repository](https://github.com/cybersorcerer/c64u))
   - Enables direct upload to C64 Ultimate hardware
   - Complete filesystem access (browse, upload, download, manage files)
   - Drive management and machine control from Neovim
@@ -151,59 +151,32 @@ return {
 
 ### Installing c64u CLI
 
-The c64u CLI tool enables direct interaction with C64 Ultimate hardware from Neovim. You can install it either by downloading pre-built binaries or by building from source.
+The c64u CLI tool enables direct interaction with C64 Ultimate hardware from Neovim.
 
-#### Option 1: Download Pre-built Binary (Recommended)
+See the [c64u repository](https://github.com/cybersorcerer/c64u) for installation instructions and documentation.
 
-Download the appropriate binary for your platform from the [GitHub Releases](https://github.com/cybersorcerer/c64.nvim/releases) page:
-
-**macOS:**
+**Quick Install:**
 
 ```bash
-# For Apple Silicon (M1/M2/M3)
-curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-darwin-arm64
+# macOS (Apple Silicon)
+curl -L -o c64u https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-darwin-arm64
 chmod +x c64u
 sudo mv c64u /usr/local/bin/
 
-# For Intel Macs
-curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-darwin-amd64
-chmod +x c64u
-sudo mv c64u /usr/local/bin/
-```
-
-**Linux:**
-
-```bash
-# For x86_64
-curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-linux-amd64
+# macOS (Intel)
+curl -L -o c64u https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-darwin-amd64
 chmod +x c64u
 sudo mv c64u /usr/local/bin/
 
-# For ARM64 (e.g., Raspberry Pi)
-curl -L -o c64u https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-linux-arm64
+# Linux (x86_64)
+curl -L -o c64u https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-linux-amd64
 chmod +x c64u
 sudo mv c64u /usr/local/bin/
+
+# Windows
+# Download: https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-windows-amd64.exe
+# Add to PATH
 ```
-
-**Windows:**
-
-```powershell
-# Download from: https://github.com/cybersorcerer/c64.nvim/releases/latest/download/c64u-windows-amd64.exe
-# Rename to c64u.exe and add to your PATH
-```
-
-#### Option 2: Build from Source
-
-Requirements:
-
-- Go 1.22 or later
-
-```bash
-cd tools/c64u
-make install
-```
-
-This will build and install c64u to `~/.local/bin/` (make sure it's in your PATH).
 
 #### Verify Installation
 
@@ -223,18 +196,7 @@ host = "c64u.local"  # or use IP like "192.168.1.100"
 port = 80
 ```
 
-Alternatively, use environment variables:
-
-```bash
-export C64U_HOST="c64u.local"
-export C64U_PORT=80
-```
-
-Or specify on the command line:
-
-```bash
-c64u --host c64u.local --port 80 about
-```
+For more configuration options and CLI usage, see the [c64u documentation](https://github.com/cybersorcerer/c64u).
 
 #### Enable in c64.nvim
 
@@ -709,6 +671,12 @@ When you press `<leader>kd`, the plugin:
 - Ensure `x64` is in your PATH: `which x64`
 - Make sure you assembled the file first (`<leader>ka`)
 - Check that a `.prg` file was created
+
+## Related Projects
+
+- [c64u](https://github.com/cybersorcerer/c64u) - C64 Ultimate CLI tool
+- [kickass_ls](https://github.com/cybersorcerer/kickass_ls) - Kick Assembler Language Server
+- [c64.vscode](https://github.com/cybersorcerer/c64.vscode) - VSCode extension for C64 development
 
 ## Contributing
 
