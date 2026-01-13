@@ -153,30 +153,36 @@ return {
 
 The c64u CLI tool enables direct interaction with C64 Ultimate hardware from Neovim.
 
-See the [c64u repository](https://github.com/cybersorcerer/c64u) for installation instructions and documentation.
+See the [c64u repository](https://github.com/cybersorcerer/c64u) for full documentation.
 
-**Quick Install:**
+**Download from GitHub Releases:**
+
+Visit the [latest release](https://github.com/cybersorcerer/c64u/releases/latest) and download the appropriate archive for your platform:
+
+- `c64u_Darwin_x86_64.tar.gz` - macOS (Intel)
+- `c64u_Darwin_arm64.tar.gz` - macOS (Apple Silicon)
+- `c64u_Linux_x86_64.tar.gz` - Linux (x86_64)
+- `c64u_Linux_arm64.tar.gz` - Linux (ARM64)
+- `c64u_Windows_x86_64.zip` - Windows
+
+**Quick Install (macOS/Linux):**
 
 ```bash
-# macOS (Apple Silicon)
-curl -L -o c64u https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-darwin-arm64
-chmod +x c64u
+# Download and extract (replace with your platform)
+curl -L https://github.com/cybersorcerer/c64u/releases/latest/download/c64u_Darwin_arm64.tar.gz | tar xz
+
+# Move binary to PATH
 sudo mv c64u /usr/local/bin/
 
-# macOS (Intel)
-curl -L -o c64u https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-darwin-amd64
-chmod +x c64u
-sudo mv c64u /usr/local/bin/
-
-# Linux (x86_64)
-curl -L -o c64u https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-linux-amd64
-chmod +x c64u
-sudo mv c64u /usr/local/bin/
-
-# Windows
-# Download: https://github.com/cybersorcerer/c64u/releases/latest/download/c64u-windows-amd64.exe
-# Add to PATH
+# Verify installation
+c64u version
 ```
+
+**Windows:**
+
+1. Download `c64u_Windows_x86_64.zip` from releases
+2. Extract `c64u.exe`
+3. Add the directory to your PATH
 
 #### Verify Installation
 
